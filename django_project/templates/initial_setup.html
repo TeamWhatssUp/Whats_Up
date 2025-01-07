@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Initial Setup</title>
+</head>
+<body>
+    <h1>초기 설정</h1>
+    <form id="initialSetupForm">
+        <label for="age">나이:</label>
+        <input type="number" id="age" name="age"><br><br>
+
+        <label for="gender">성별:</label>
+        <select id="gender" name="gender">
+            <option value="남성">남성</option>
+            <option value="여성">여성</option>
+        </select><br><br>
+
+        <label for="major">전공:</label>
+        <input type="text" id="major" name="major"><br><br>
+
+        <label for="mbti">MBTI:</label>
+        <input type="text" id="mbti" name="mbti"><br><br>
+
+        <label for="bio">자기소개:</label><br>
+        <textarea id="bio" name="bio" rows="4" cols="50"></textarea><br><br>
+
+        <button type="button" onclick="saveInitialSetup()">저장</button>
+    </form>
+
+    <script>
+        async function saveInitialSetup() {
+            const response = await fetch('/account/initial-setup/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('access_token'),
+                },
+                body: JSON.stringify({
+                    age: document.getElementById('age').value,
+                    gender: document.getElementById('gender').value,
+                    major: document.getElementById('major').value,
+                    mbti: document.getElementById('mbti').value,
+                    bio: document.getElementById('bio').value,
+                }),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                alert('초기 설정이 저장되었습니다!');
+                window.location.href = '/dashboard/';
+            } else {
+                alert('저장 실패: ' + JSON.stringify(data));
+            }
+        }
+    </script>
+</body>
+</html>
