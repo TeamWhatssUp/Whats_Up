@@ -23,6 +23,7 @@ class RegisterView(APIView):
             return Response({'message': 'User created successfully!'}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class LoginView(TokenObtainPairView):
     pass
 
