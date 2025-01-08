@@ -7,7 +7,9 @@ from .serializers import UserSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.shortcuts import redirect
 from django.views import View
-
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
 
 
 
@@ -36,11 +38,27 @@ class InitialSetupPage(View):
 def login_page(request):
     return render(request, 'login.html')
 
-def chatbot_page(request):
-    return render(request, 'chatbot.html')
-
 def login_redirect(request):
     return redirect('chatbot_page')
 
 def register_page(request):
     return render(request, 'register.html')
+
+def index(request):
+    # 기본 경로에서 JSON 응답 반환
+    return JsonResponse({'message': 'Hello, this is accounts app!'})
+
+def chatbot_page(request):
+    # /chatbot/ 경로에서 chatbot.html 템플릿 렌더링
+    return render(request, 'chatbot.html')
+
+@csrf_exempt
+def chatbot_api(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        user_message = data.get("message", "")
+
+        # 간단한 봇 응답 로직
+        bot_response = f"You said: {user_message}"
+        return JsonResponse({"response": bot_response})
+    return JsonResponse({"error": "Invalid request method"}, status=400)
