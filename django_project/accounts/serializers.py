@@ -23,4 +23,4 @@ class UserSerializer(serializers.ModelSerializer):
 class InitialSetupSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['bio', 'age', 'gender', 'major', 'mbti']
+        fields = ['age', 'gender', 'major']
