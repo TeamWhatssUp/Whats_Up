@@ -2,9 +2,7 @@ from django.urls import path
 from .views import RegisterView, InitialSetupPage, login_redirect
 from django.contrib.auth.views import LoginView
 from . import views
-from .views import login_page
-from .views import chatbot_page
-from .views import login_page, register_page
+from .views import login_page, register_page, chatbot_page
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 urlpatterns = [
