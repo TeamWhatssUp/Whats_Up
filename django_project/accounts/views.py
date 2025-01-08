@@ -29,12 +29,10 @@ class RegisterView(APIView):
 class LoginView(TokenObtainPairView):
     pass
 
-
 class InitialSetupPage(View):
     def get(self, request):
         return HttpResponse("Initial setup page loaded.")
     
-
 def login_page(request):
     return render(request, 'login.html')
 
@@ -43,3 +41,6 @@ def chatbot_page(request):
 
 def login_redirect(request):
     return redirect('chatbot_page')
+
+def register_page(request):
+    return render(request, 'register.html')
