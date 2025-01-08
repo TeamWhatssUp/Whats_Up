@@ -9,6 +9,8 @@ from django.shortcuts import redirect
 from django.views import View
 
 
+
+
 # Create your views here.
 
 def index(request):
@@ -33,8 +35,11 @@ class InitialSetupPage(View):
         return HttpResponse("Initial setup page loaded.")
     
 
+def login_page(request):
+    return render(request, 'login.html')
+
+def chatbot_page(request):
+    return render(request, 'chatbot.html')
+
 def login_redirect(request):
-    user = request.user
-    if not user.age or not user.major:  # 초기 설정 미완료 체크
-        return redirect('initial_setup_page')
-    return redirect('dashboard')  # 초기 설정 완료된 경우 대시보드로 이동
+    return redirect('chatbot_page')

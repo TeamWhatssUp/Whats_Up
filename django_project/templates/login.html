@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+</head>
+<body>
+    <h1>로그인</h1>
+    <form id="loginForm">
+        <label for="username">아이디:</label>
+        <input type="text" id="username" name="username"><br><br>
+
+        <label for="password">비밀번호:</label>
+        <input type="password" id="password" name="password"><br><br>
+
+        <button type="button" onclick="login()">로그인</button>
+    </form>
+
+    <script>
+        async function login() {
+            const response = await fetch('/account/login/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: document.getElementById('username').value,
+                    password: document.getElementById('password').value,
+                }),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                // JWT 토큰 저장
+                localStorage.setItem('access_token', data.access);
+                localStorage.setItem('refresh_token', data.refresh);
+
+                alert('로그인 성공!');
+                window.location.href = '/chatbot/';  // 챗봇 페이지로 이동
+            } else {
+                alert('로그인 실패: ' + JSON.stringify(data));
+            }
+        }
+    </script>
+</body>
+</html>
