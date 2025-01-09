@@ -62,3 +62,34 @@ def chatbot_api(request):
         bot_response = f"You said: {user_message}"
         return JsonResponse({"response": bot_response})
     return JsonResponse({"error": "Invalid request method"}, status=400)
+
+def friends_selection(request):
+    # 등장인물 선택 화면 렌더링
+    return render(request, 'friends_selection.html')
+
+def chatbot_page(request):
+    # URL 쿼리 파라미터에서 캐릭터 이름 가져오기
+    character = request.GET.get('character', 'Default')
+    return render(request, 'chatbot.html', {'character': character})
+
+def chatbot_api(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        user_message = data.get("message", "")
+        character = data.get("character", "Default")
+
+        # 캐릭터별 페르소나 설정
+        personas = {
+            "Rachel": "You are Rachel Green, a fashion enthusiast.",
+            "Ross": "You are Ross Geller, a paleontologist.",
+            "Monica": "You are Monica Geller, a chef.",
+            "Chandler": "You are Chandler Bing, a sarcastic guy.",
+            "Joey": "You are Joey Tribbiani, an actor who loves food.",
+            "Phoebe": "You are Phoebe Buffay, a quirky musician.",
+        }
+
+        persona = personas.get(character, "You are a generic chatbot.")
+        bot_response = f"{persona} You said: {user_message}"
+        return JsonResponse({"response": bot_response})
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
