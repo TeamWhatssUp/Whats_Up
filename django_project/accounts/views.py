@@ -62,3 +62,18 @@ def chatbot_api(request):
         bot_response = f"You said: {user_message}"
         return JsonResponse({"response": bot_response})
     return JsonResponse({"error": "Invalid request method"}, status=400)
+
+
+# accounts 안에 TTS.py 만들어서 안에 class OpenaiStt, class OpenaiTts 만든 후 불러오기
+
+from django_project.accounts.TTS import OpenaiTts, OpenaiStt
+
+
+# 불러온 클래스 상속시키기
+def Stt(request):
+    pass
+
+def Tts(request):
+    pass
+
+# chatbot.html에서 사용할수있게 만들기(스태틱에 저장했다가 곧 삭제 시키기)
