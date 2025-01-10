@@ -9,6 +9,10 @@
         const urlParams = new URLSearchParams(window.location.search);
         const character = urlParams.get('character');
 
+        // 음성 인식 변수
+        let recognition = null;
+        let isRecognizing = false;
+
         // 페이지 로드 시 캐릭터 이름 표시
         window.onload = () => {
             document.getElementById("character-name").innerText = character || "Default Character";
@@ -30,12 +34,51 @@
             chatBox.innerHTML += `<p><strong>${character}:</strong> ${data.response}</p>`;
             chatBox.scrollTop = chatBox.scrollHeight; // 스크롤 아래로 이동
         }
+
+        // TTS 음성 입력 처리
+        function toggleSpeechRecognition() {
+            const micButton = document.getElementById("mic-button");
+
+            if (!recognition) {
+                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.lang = 'en-US'; // 언어 설정
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    document.getElementById("user-input").value = transcript;
+                };
+
+                recognition.onerror = (event) => {
+                    alert("Speech recognition error: " + event.error);
+                };
+
+                recognition.onend = () => {
+                    isRecognizing = false;
+                    micButton.src = "/static/images/microphone-icon.jpg";
+                };
+            }
+
+            if (isRecognizing) {
+                recognition.stop();
+                isRecognizing = false;
+                micButton.src = "/static/images/microphone-icon.jpg"; // 마이크 아이콘
+            } else {
+                recognition.start();
+                isRecognizing = true;
+                micButton.src = "/static/images/off-mic-icon.jpg"; // 마이크 끔 아이콘
+            }
+        }
     </script>
 </head>
 <body>
     <h1>Chatbot with <span id="character-name"></span></h1>
     <div id="chat-box" style="border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto;"></div>
-    <input id="user-input" type="text" placeholder="Type your message here">
-    <button onclick="sendMessage()">Send</button>
+    <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <input id="user-input" type="text" placeholder="Type your message here" style="flex: 1;">
+        <button onclick="toggleSpeechRecognition()" style="background: none; border: none; cursor: pointer;">
+            <img id="mic-button" src="/static/images/microphone-icon.jpg" alt="Mic" style="width: 30px; height: 30px;">
+        </button>
+        <button onclick="sendMessage()">Send</button>
+    </div>
 </body>
 </html>
