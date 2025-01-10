@@ -13,6 +13,7 @@ from .views import (
     chatbot_api,
 )
 from rest_framework_simplejwt.views import TokenObtainPairView
+from django.contrib.auth.views import LogoutView  # 로그아웃 뷰 추가
 
 urlpatterns = [
     path('', index, name='index'),
@@ -26,4 +27,5 @@ urlpatterns = [
     path('register-page/', register_page, name='register_page'),
     path('api/', chatbot_api, name='chatbot_api'),
     path('friends-selection/', friends_selection, name='friends_selection'),
+    path('logout/', LogoutView.as_view(), name='logout'),  # 로그아웃 URL 추가
 ]
