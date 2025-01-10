@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>사용자 프로필</title>
+</head>
+<body>
+    <h1>사용자 프로필</h1>
+    <p>아이디: {{ username }}</p>
+    <p>이메일: {{ email }}</p>
+
+    <h2>비밀번호 변경</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">비밀번호 변경</button>
+    </form>
+
+    <h2>계정 관리</h2>
+    <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit">로그아웃</button>
+    </form>
+    <form method="post" action="{% url 'delete_account' %}">
+        {% csrf_token %}
+        <button type="submit">회원 탈퇴</button>
+    </form>
+</body>
+</html>
