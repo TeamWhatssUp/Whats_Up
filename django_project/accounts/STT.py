@@ -54,7 +54,7 @@ class AudioTranscriber:
         self.client = OpenAI(api_key = os.getenv("OPENAI_API_KEY"))
 
     def transcribe(self, model="whisper-1", language=["en", "kr"]):
-        with open("recoding.wav", "rb") as audio_file:
+        with open("recording.wav", "rb") as audio_file:
             transcription = self.client.audio.transcriptions.create(
                 model=model,
                 file=audio_file,
@@ -70,17 +70,17 @@ recorder = AudioRecorder(
         channels=1,              # Number of audio channels (mono)
         rate=44100,              # Sampling rate in Hz
         duration=10,             # Duration of the recording in seconds
-        output_filename="recoding.wav"  # File to save the recording
+        output_filename="recording.wav"  # File to save the recording
     )
 
 
 
 # 사용방법
 recorder.record()
-print("Start recoding")
+print("Start recording")
 recorder.save()
 recorder.terminate()
-print("Recording has been saved to 'recoding.wav'.")
+print("Recording has been saved to 'recording.wav'.")
 
 transcriber = AudioTranscriber()
 print("Starting transcription...")
