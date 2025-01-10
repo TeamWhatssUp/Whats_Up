@@ -1,230 +1,37 @@
 import os
 from dotenv import load_dotenv
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain.schema import Document
 from langchain.embeddings.openai import OpenAIEmbeddings
-import faiss
-from langchain.vectorstores import FAISS
-from langchain.chains import RetrievalQA
+from langchain_community.vectorstores import FAISS
 from langchain.text_splitter import CharacterTextSplitter
 import json
-from langdetect import detect
 
 # .env 파일에서 환경 변수 로드
 load_dotenv()
-
-# OpenAI API 키 가져오기
 api_key = os.getenv("OPENAI_API_KEY")
-
 if not api_key:
     raise ValueError("API 키가 .env 파일에 설정되어 있지 않습니다.")
 
-# 모델 초기화
-model = ChatOpenAI(model="gpt-4", openai_api_key=api_key)
+def format_character_name(character_name):
+    """캐릭터 이름을 파일명에 맞게 포맷팅"""
+    return character_name.strip().lower().replace(" ", "_") + "_prompt.txt"
 
-# Character 클래스 정의 (앞서 정의된 내용 그대로 사용)
-class Character:
-    def __init__(self, name, age, job, hobbies, skills, personality, relationships, catchphrases, conversation_patterns):
-        self.name = name
-        self.age = age
-        self.job = job
-        self.hobbies = hobbies
-        self.skills = skills
-        self.personality = personality
-        self.relationships = relationships
-        self.catchphrases = catchphrases
-        self.conversation_patterns = conversation_patterns
+def load_character_prompt(character_name):
+    """캐릭터에 맞는 프롬프트를 파일에서 읽어오는 함수"""
+    try:
+        base_dir = os.path.dirname(os.path.abspath(__file__))  
+        file_name = format_character_name(character_name)
+        file_path = os.path.join(base_dir, "prompts", file_name)
 
-    def make_comment(self):
-        """Character introduces themselves in their own style, inviting the user to chat."""
-        if self.name == "Rachel Green":
-            return (
-                f"안녕! 난 Rachel Green이야. 🎀 "
-                f"패션이 내 인생이지, 그리고 쇼핑은 내 취미야. "
-                f"가끔 내가 좀 자기중심적일 때도 있지만, 정말 caring한 사람이야. "
-                f"혹시 연애 상담이 필요하거나, 패션에 대해 이야기하고 싶다면 나랑 대화해보는 거 어때? "
-                f"내가 사랑하는 이야기를 나누면서 너의 이야기도 듣고 싶어. 😊"
-            )
-        elif self.name == "Monica Geller":
-            return (
-                f"안녕하세요! 저는 Monica Geller입니다. 🍳 "
-                f"요리하는 걸 정말 사랑하고요, 솔직히 말해서 제가 제일 잘해요. "
-                f"아, 청소나 정리도 완벽하게 할 수 있죠. "
-                f"조금 지나치게 경쟁적일 수도 있지만, 그건 제가 목표에 얼마나 진심인지 보여주는 거예요! "
-                f"누군가에게 멋진 조언이나 진솔한 대화를 원하면 저를 선택해주세요! "
-                f"'{self.catchphrases[0]}' 이 말은 저와 잘 어울리죠?"
-            )
-        elif self.name == "Phoebe Buffay":
-            return (
-                f"안녕~ 난 Phoebe Buffay야! 🎸 "
-                f"난 좀 특이하고 자유로운 영혼이야. 'Smelly Cat'이라는 노래 들어봤어? 그거 내가 만든 거야! "
-                f"아주 재미있는 이야기들로 가득 찬 내 세계를 너랑 나누고 싶어. "
-                f"스스로를 너무 심각하게 생각하지 않는 사람이 필요하다면, 내가 바로 그 사람이야. "
-                f"우리 이야기해볼래? 'Smelly Cat~' 같이 불러도 좋고!"
-            )
-        elif self.name == "Joey Tribbiani":
-            return (
-                f"안녕, 난 Joey Tribbiani야. 🍕 "
-                f"내 Catchphrase 알지? 'How you doin'?' 😏 "
-                f"나는 간단한 게 좋아, 먹는 거, 연기하는 거, 데이트. "
-                f"근데 난 정말 충실한 친구야. 누가 나한테 무슨 말을 해도 나는 그냥 솔직하게 말해. "
-                f"우리 대화하면 웃기고 편안한 시간이 될 거야, 확실해!"
-            )
-        elif self.name == "Chandler Bing":
-            return (
-                f"Hey, 안녕! 난 Chandler Bing이야. 😂 "
-                f"내가 뭘 잘하냐고? 물론 sarcasm이지! "
-                f"내 직업에 대해서 물어보면 복잡하지만, 대화는 절대 재미없지 않아. "
-                f"솔직히 말해서 내가 제일 웃긴 사람이라는 걸 알게 될 거야. "
-                f"대화할 준비 됐어? 'Could I BE any more ready to chat?'"
-            )
-        elif self.name == "Ross Geller":
-            return (
-                f"안녕하세요, 저는 Dr. Ross Geller입니다. 🦖 "
-                f"네, 저는 고생물학자예요. 공룡을 연구하죠. 그리고 아니요, 그건 지루하지 않아요! "
-                f"제가 사랑과 과학에 대해 얘기하는 걸 좋아해요. 가끔 너무 논리적이거나 감정적일 수도 있지만, "
-                f"대화를 나누다 보면 그게 저의 매력이라는 걸 알게 될 거예요. "
-                f"혹시 제 말을 듣고 싶으신가요? 'We were on a break!' 이 문장에 대해 얘기해 봐요!"
-            )
-        else:
-            return "Hello! I'm just another character from Friends. Wanna chat?"
+        with open(file_path, "r", encoding="utf-8") as file:
+            prompt = file.read().strip()
+        return prompt
+    except FileNotFoundError:
+        return f"Hi, I am {character_name.capitalize()}. Let's talk!"
 
-    def __repr__(self):
-        return f"Character({self.name}, {self.age}, {self.job})"
-
-# 각 캐릭터 정의
-rachel_green = Character(
-    name="Rachel Green",
-    age=24,
-    job="Fashion Executive",
-    hobbies=["Shopping", "Fashion", "Socializing"],
-    skills=["Fashion sense", "Waitressing"],
-    personality="Friendly, outgoing, sometimes self-centered but caring.",
-    relationships={
-        "Monica Geller": "Best friend from high school.",
-        "Ross Geller": "On-again, off-again romantic relationship; father of her daughter, Emma.",
-        "Joey Tribbiani": "Close friend; brief romantic involvement.",
-        "Chandler Bing": "Friend.",
-        "Phoebe Buffay": "Friend.",
-    },
-    catchphrases=["It's like all my life everyone has always told me, 'You're a shoe!'"],
-    conversation_patterns="Often uses expressive language, talks about fashion and relationships, can be self-focused."
-)
-
-monica_geller = Character(
-    name="Monica Geller",
-    age=26,
-    job="Chef",
-    hobbies=["Cooking", "Cleaning", "Organizing"],
-    skills=["Cooking", "Organizing", "Competing"],
-    personality="Competitive, organized, caring.",
-    relationships={
-        "Rachel Green": "Best friend from high school.",
-        "Ross Geller": "Brother.",
-        "Joey Tribbiani": "Friend.",
-        "Chandler Bing": "Husband.",
-        "Phoebe Buffay": "Friend.",
-    },
-    catchphrases=["Welcome to the real world. It sucks. You’re gonna love it!"],
-    conversation_patterns="Often talks about cooking and organizing, has a competitive streak."
-)
-
-phoebe_buffay = Character(
-    name="Phoebe Buffay",
-    age=27,
-    job="Musician",
-    hobbies=["Singing", "Songwriting", "Spirituality"],
-    skills=["Singing", "Guitar", "Comedy"],
-    personality="Free-spirited, quirky, funny.",
-    relationships={
-        "Monica Geller": "Best friend.",
-        "Rachel Green": "Best friend.",
-        "Joey Tribbiani": "Friend.",
-        "Chandler Bing": "Friend.",
-        "Ross Geller": "Friend.",
-    },
-    catchphrases=["Smelly Cat, Smelly Cat, what are they feeding you?"],
-    conversation_patterns="Often talks about songs, spirituality, and quirky experiences."
-)
-
-joey_tribbiani = Character(
-    name="Joey Tribbiani",
-    age=28,
-    job="Actor",
-    hobbies=["Eating", "Acting", "Dating"],
-    skills=["Acting", "Charm", "Loving"],
-    personality="Simple, charming, loyal.",
-    relationships={
-        "Rachel Green": "Close friend; brief romantic involvement.",
-        "Monica Geller": "Friend.",
-        "Phoebe Buffay": "Friend.",
-        "Chandler Bing": "Best friend.",
-        "Ross Geller": "Friend.",
-    },
-    catchphrases=["How you doin'?"],
-    conversation_patterns="Talks about food, acting, and relationships."
-)
-
-chandler_bing = Character(
-    name="Chandler Bing",
-    age=29,
-    job="Statistical Analysis and Data Reconfiguration",
-    hobbies=["Sarcasm", "Making jokes", "Friends"],
-    skills=["Sarcasm", "Jokes", "Negotiation"],
-    personality="Sarcastic, funny, self-deprecating.",
-    relationships={
-        "Monica Geller": "Wife.",
-        "Rachel Green": "Friend.",
-        "Phoebe Buffay": "Friend.",
-        "Joey Tribbiani": "Best friend.",
-        "Ross Geller": "Friend.",
-    },
-    catchphrases=["Could I BE any more..."],
-    conversation_patterns="Uses sarcasm, often cracks jokes and references his job."
-)
-
-ross_geller = Character(
-    name="Ross Geller",
-    age=30,
-    job="Paleontologist",
-    hobbies=["Science", "Dinosaurs", "Paleontology"],
-    skills=["Paleontology", "Teaching", "Science Trivia"],
-    personality="Logical, passionate, sometimes emotional.",
-    relationships={
-        "Rachel Green": "Ex-wife, father of her daughter, Emma.",
-        "Monica Geller": "Sister.",
-        "Joey Tribbiani": "Friend.",
-        "Chandler Bing": "Friend.",
-        "Phoebe Buffay": "Friend.",
-    },
-    catchphrases=["We were on a break!"],
-    conversation_patterns="Often talks about dinosaurs, science, and relationships."
-)
-
-# 캐릭터 목록
-characters = [
-    rachel_green,
-    monica_geller,
-    phoebe_buffay,
-    joey_tribbiani,
-    chandler_bing,
-    ross_geller
-]
-
-# 캐릭터 선택
-print("Choose a character:")
-for idx, character in enumerate(characters, 1):
-    print(f"{idx}. {character.name}")
-
-# 사용자로부터 캐릭터 선택
-selected_idx = int(input("Enter the number of your choice: ")) - 1
-selected_character = characters[selected_idx]
-
-# 캐릭터 소개 출력
-print(f"\n{selected_character.make_comment()}\n")
-
-# 대본 파일 로드 함수
 def load_scripts(folder):
+    """폴더 내 텍스트 파일을 Document 리스트로 로드"""
     documents = []
     for root, _, files in os.walk(folder):
         for file in files:
@@ -234,46 +41,182 @@ def load_scripts(folder):
                     documents.append(Document(page_content=content))
     return documents
 
-# 슬랭 데이터 로드
-with open('slang_data.json', 'r', encoding='utf-8') as file:
-    slang_data = json.load(file)
+def load_slang_data(filepath):
+    """슬랭 데이터를 Document 형식으로 로드"""
+    with open(filepath, 'r', encoding='utf-8') as file:
+        slang_data = json.load(file)
+    return [Document(page_content=f"Term: {item['term']}\nDescription: {item['description']}") for item in slang_data]
 
-# 대본과 슬랭 데이터 결합
-slang_docs = [Document(page_content=f"Term: {item['term']}\nDescription: {item['description']}") for item in slang_data]
-all_docs = load_scripts("Friends_Scripts")
-documents = all_docs + slang_docs
+def combine_documents(script_docs, slang_docs):
+    """대본과 슬랭 데이터를 결합"""
+    return script_docs + slang_docs
 
-# 문서 분할 및 벡터스토어 처리
-def split_documents(documents, chunk_size=500, chunk_overlap=50):
-    splitter = CharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
-    return splitter.split_documents(documents)
+# Character 클래스 정의
+class Character:
+    def __init__(self, name, age, job, hobbies, skills, personality, catchphrases, conversation_patterns, intro=None, relationships=None):
+        self.name = name
+        self.age = age
+        self.job = job
+        self.hobbies = hobbies
+        self.skills = skills
+        self.personality = personality
+        self.catchphrases = catchphrases
+        self.conversation_patterns = conversation_patterns
+        self.intro = intro if intro else f"Hello, I'm {name}!"
+        self.relationships = relationships if relationships else {}
 
-split_docs = split_documents(documents)
+    def introduce(self):
+        """캐릭터가 자기소개를 출력"""
+        return self.intro
 
-embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
-vectorstore = FAISS.from_documents(split_docs, embeddings)
+def create_characters():
+    return [
+        Character(
+            name="Rachel Green",
+            age=28,
+            job="Fashion Consultant",
+            hobbies=["Shopping", "Socializing", "Traveling"],
+            skills=["Fashion sense", "Styling", "Branding"],
+            personality="Charming, fashionable, loyal, sometimes naive, and optimistic.",
+            catchphrases=["'Could I BE any more...?'"],
+            conversation_patterns=["Gossipy", "Supportive", "Slightly dramatic"],
+            intro="Hey! I'm Rachel Green. I love fashion and shopping. Want to tell me your story?",
+            relationships={"Monica": "Best friend", "Ross": "Romantic interest"}
+        ),
+        Character(
+        name="Monica Geller",
+        age=28,
+        job="Chef",
+        hobbies=["Cooking", "Organizing", "Playing with her nephews"],
+        skills=["Cooking", "Cleaning", "Organization"],
+        personality="Competitive, Organized, Caring, Slightly neurotic, and loves control.",
+        catchphrases=["'Welcome to the real world! It sucks. You’re gonna love it!'"],
+        conversation_patterns=["Perfectionistic", "Caring", "Occasionally bossy"],
+        intro="Hey! I'm Monica Geller. I love cooking and cleaning. Creating a perfect world is my life's goal!",
+        relationships={"Rachel": "Best friend", "Chandler": "Husband"}
+        ),
+        Character(
+        name="Chandler Bing",
+        age=28,
+        job="Statistical Analysis and Data Reconfiguration",
+        hobbies=["Sarcasm", "Humor", "Making jokes"],
+        skills=["Quick wit", "Sarcasm", "Self-deprecating humor"],
+        personality="Sarcastic, Witty, Self-deprecating, Slightly awkward, Endearing",
+        catchphrases=["'Could I BE any more...?'"],
+        conversation_patterns=["Dry humor", "Sarcastic", "Joking", "Self-criticism"],
+        intro="Could I BE any more excited to meet you? Nah, I didn’t think so.",
+        relationships={"Monica": "Wife", "Joey": "Close friend"}
+        ),
+        Character(
+        name="Ross Geller",
+        age=29,
+        job="Paleontologist",
+        hobbies=["Dinosaurs", "Science", "Reading"],
+        skills=["Scientific knowledge", "Teaching", "Paleontology"],
+        personality="Intelligent, Sensitive, Often socially awkward, Can be jealous",
+        catchphrases=["'We were on a break!'"],
+        conversation_patterns=["Analytical", "Clumsy", "Sometimes serious but also passionate"],
+        intro="Hi, I’m Ross. I’m a paleontologist... and yes, I love dinosaurs!",
+        relationships={"Rachel": "Romantic interest", "Monica": "Sister", "Chandler": "Close friend"}
+        ),
+        Character(
+        name="Joey Tribbiani",
+        age=27,
+        job="Actor",
+        hobbies=["Acting", "Eating", "Dating"],
+        skills=["Acting", "Charm", "Having a good time"],
+        personality="Fun-loving, Charming, Sometimes naive, a bit of a ladies' man",
+        catchphrases=["'How you doin'?'"],
+        conversation_patterns=["Confident", "Playful", "Naive"],
+        intro="Hey! Joey Tribbiani here. I’m an actor... and I know how to have a good time!",
+        relationships={"Chandler": "Best friend", "Rachel": "Ex-girlfriend"}
+        ),
+        Character(
+        name="Phoebe Buffay",
+        age=28,
+        job="Masseuse, Musician",
+        hobbies=["Playing guitar", "Singing", "Yoga"],
+        skills=["Music", "Singing", "Positive energy"],
+        personality="Eccentric, Free-spirited, Optimistic, Kind-hearted",
+        catchphrases=["'Smelly Cat, Smelly Cat, what are they feeding you?'"],
+        conversation_patterns=["Quirky", "Optimistic", "Often sings or makes strange comments"],
+        intro="Hi, I’m Phoebe Buffay. I play the guitar and I’m a total free spirit!",
+        relationships={"Monica": "Best friend", "Mike": "Husband"}
+        )
+]
 
-retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 3})
-qa_chain = RetrievalQA.from_chain_type(llm=model, retriever=retriever, return_source_documents=True)
 
-# 언어 감지 함수
-def detect_language(text):
+def prepare_vectorstore(documents, embeddings_model):
+    splitter = CharacterTextSplitter(chunk_size=300, chunk_overlap=30)
+    split_docs = splitter.split_documents(documents)
+    vectorstore = FAISS.from_documents(split_docs, embeddings_model)
+    return vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 3})
+
+embeddings = OpenAIEmbeddings()
+
+# 메인 함수
+def main():
+    # 캐릭터 생성
+    characters = create_characters()
+    print("Choose a character:")
+    for idx, char in enumerate(characters, 1):
+        print(f"{idx}. {char.name}")
+
+    # 사용자 입력으로 캐릭터 선택
     try:
-        return detect(text)
-    except:
-        return "en"
+        selected_idx = int(input("Enter the number of your choice: ")) - 1
+        selected_character = characters[selected_idx]
+        print(f"\n{selected_character.introduce()}\n")
+    except (ValueError, IndexError):
+        print("잘못된 입력입니다. 다시 시도하세요.")
+        return
 
-# 사용자 입력 받기
-while True:
-    query = input(f"Ask {selected_character.name} a question (type 'exit' to quit): ")
-    if query.lower() == 'exit':
-        break
+    # 캐릭터의 프롬프트 불러오기
+    character_prompt = load_character_prompt(selected_character.name)
+    if "not found" in character_prompt:
+        print(f"Warning: {character_prompt}")
+        character_prompt = f"Hi, I am {selected_character.name}. Let's talk!"
 
-    lang = detect_language(query)
-    try:
-        print("\nGenerating response...\n")
-        result = qa_chain({"query": query})
-        answer = result.get('result', "Sorry, I couldn't find an answer.")
-        print(f"{selected_character.name}: {answer}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
+    print(f"Loaded prompt for {selected_character.name}: {character_prompt}")
+
+    # 대본과 슬랭 데이터 로드
+    script_docs = load_scripts("Friends_Scripts")  # "scripts" 폴더에서 대본 파일 로드
+    slang_docs = load_slang_data("slang_data.json")  # 슬랭 데이터를 로드 (슬랭 파일 예시: slang_data.json)
+
+    # 대본과 슬랭 데이터 결합
+    combined_documents = combine_documents(script_docs, slang_docs)
+
+    # 모델과 벡터스토어 준비
+    documents = [Document(page_content=character_prompt)]  # 캐릭터의 프롬프트를 문서로 변환
+    documents.extend(combined_documents)  # 결합된 대본과 슬랭 데이터 추가
+    vectorstore = prepare_vectorstore(documents, embeddings)  # 벡터스토어 준비
+
+    # ChatOpenAI 모델 준비
+    model = ChatOpenAI(model="gpt-4", openai_api_key=api_key)
+
+    # 대화 맥락 초기화
+    context = character_prompt  # 캐릭터의 성격을 담은 시작 메시지
+
+    while True:
+        query = input(f"Ask {selected_character.name} a question (type 'exit' to quit): ")
+        if query.lower() == "exit":
+            print("Goodbye!")
+            break
+
+        # 대화 내용에 맞는 관련 문서 검색 (벡터스토어 사용)
+        search_results = vectorstore.get_relevant_documents(query)  # 'retrieve'를 'get_relevant_documents'로 수정
+        context += "\n" + "\n".join([doc.page_content for doc in search_results])  # 맥락에 추가
+
+
+        # 모델에 메시지 전달
+        messages = [{"role": "system", "content": context}, {"role": "user", "content": query}]
+        response = model(messages)  # 모델에 메시지 전달
+
+        # AIMessage 객체의 content에 접근
+        print(f"{selected_character.name}: {response.content}")  # 수정된 부분
+        context += "\n" + response.content  # 응답을 맥락에 추가
+
+
+
+if __name__ == "__main__":
+    main()
