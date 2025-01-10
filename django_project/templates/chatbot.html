@@ -4,160 +4,81 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chatbot</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
-            margin: 0;
-            padding: 0;
+    <script>
+        // URL에서 캐릭터 이름 가져오기
+        const urlParams = new URLSearchParams(window.location.search);
+        const character = urlParams.get('character');
+
+        // 음성 인식 변수
+        let recognition = null;
+        let isRecognizing = false;
+
+        // 페이지 로드 시 캐릭터 이름 표시
+        window.onload = () => {
+            document.getElementById("character-name").innerText = character || "Default Character";
+        };
+
+        // 메시지 전송 처리
+        async function sendMessage() {
+            const userInput = document.getElementById("user-input").value;
+            const response = await fetch("/chatbot/api/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ message: userInput, character: character }),
+            });
+
+            const data = await response.json();
+            const chatBox = document.getElementById("chat-box");
+            chatBox.innerHTML += `<p><strong>${character}:</strong> ${data.response}</p>`;
+            chatBox.scrollTop = chatBox.scrollHeight; // 스크롤 아래로 이동
         }
-        #chat-container {
-            width: 90%;
-            max-width: 800px;
-            margin: 40px auto;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
+
+        // TTS 음성 입력 처리
+        function toggleSpeechRecognition() {
+            const micButton = document.getElementById("mic-button");
+
+            if (!recognition) {
+                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.lang = 'en-US'; // 언어 설정
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    document.getElementById("user-input").value = transcript;
+                };
+
+                recognition.onerror = (event) => {
+                    alert("Speech recognition error: " + event.error);
+                };
+
+                recognition.onend = () => {
+                    isRecognizing = false;
+                    micButton.src = "/static/images/microphone-icon.jpg";
+                };
+            }
+
+            if (isRecognizing) {
+                recognition.stop();
+                isRecognizing = false;
+                micButton.src = "/static/images/microphone-icon.jpg"; // 마이크 아이콘
+            } else {
+                recognition.start();
+                isRecognizing = true;
+                micButton.src = "/static/images/off-mic-icon.jpg"; // 마이크 끔 아이콘
+            }
         }
-        #chat-header {
-            background: #007bff;
-            color: white;
-            padding: 15px 20px;
-            font-size: 20px;
-            font-weight: bold;
-            text-align: center;
-        }
-        #chat-box {
-            flex: 1;
-            padding: 20px;
-            height: 400px;
-            overflow-y: auto;
-            background-color: #f4f4f9;
-            border-bottom: 1px solid #ddd;
-        }
-        .chat-message {
-            margin-bottom: 15px;
-        }
-        .chat-message.user {
-            text-align: right;
-        }
-        .chat-message.bot {
-            text-align: left;
-        }
-        .chat-message .message {
-            display: inline-block;
-            padding: 10px;
-            border-radius: 12px;
-            max-width: 70%;
-        }
-        .chat-message.user .message {
-            background: #007bff;
-            color: white;
-        }
-        .chat-message.bot .message {
-            background: #e4e6eb;
-            color: black;
-        }
-        #input-box {
-            display: flex;
-            border-top: 1px solid #ddd;
-            padding: 10px;
-            background-color: #fff;
-        }
-        #input-box textarea {
-            flex: 1;
-            resize: none;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-        }
-        #input-box button {
-            margin-left: 10px;
-            padding: 10px 20px;
-            font-size: 16px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        #input-box button:hover {
-            background: #0056b3;
-        }
-    </style>
+    </script>
 </head>
 <body>
-    <div id="chat-container">
-        <div id="chat-header">Whats Up</div>
-        <div id="chat-box" id="chatbox">
-            <!-- Messages will dynamically appear here -->
-        </div>
-        <div id="input-box">
-            <textarea id="user-input" placeholder="Type your message here..." rows="1"></textarea>
-            <button id="send-btn">Send</button>
-        </div>
+    <h1>Chatbot with <span id="character-name"></span></h1>
+    <div id="chat-box" style="border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto;"></div>
+    <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <input id="user-input" type="text" placeholder="Type your message here" style="flex: 1;">
+        <button onclick="toggleSpeechRecognition()" style="background: none; border: none; cursor: pointer;">
+            <img id="mic-button" src="/static/images/microphone-icon.jpg" alt="Mic" style="width: 30px; height: 30px;">
+        </button>
+        <button onclick="sendMessage()">Send</button>
     </div>
-
-    <script>
-        const chatBox = document.getElementById("chat-box");
-        const userInput = document.getElementById("user-input");
-        const sendBtn = document.getElementById("send-btn");
-
-        // Helper function to append messages to chat box
-        function appendMessage(sender, text) {
-            const messageDiv = document.createElement("div");
-            messageDiv.className = `chat-message ${sender}`;
-            messageDiv.innerHTML = `<div class="message">${text}</div>`;
-            chatBox.appendChild(messageDiv);
-            chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom
-        }
-
-        // Function to handle user input
-        async function handleUserInput() {
-            const message = userInput.value.trim();
-            if (!message) return;
-
-            // Display user message in chat
-            appendMessage("user", message);
-            userInput.value = "";
-
-            // Send message to server for processing
-            try {
-                const response = await fetch("/chatbot/api/", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ message }),
-                });
-
-                const data = await response.json();
-                if (response.ok) {
-                    appendMessage("bot", data.response); // Show bot response
-                } else {
-                    appendMessage("bot", "Oops, something went wrong!");
-                }
-            } catch (error) {
-                console.error("Error:", error);
-                appendMessage("bot", "Unable to connect to the server.");
-            }
-        }
-
-        // Event listener for the send button
-        sendBtn.addEventListener("click", handleUserInput);
-
-        // Allow "Enter" key to send message
-        userInput.addEventListener("keypress", (event) => {
-            if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                handleUserInput();
-            }
-        });
-    </script>
 </body>
 </html>
