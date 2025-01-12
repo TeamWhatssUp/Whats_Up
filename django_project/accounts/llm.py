@@ -8,6 +8,7 @@ from langchain.text_splitter import CharacterTextSplitter
 from django.conf import settings
 import json
 
+
 # .env 파일에서 환경 변수 로드
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
@@ -193,7 +194,8 @@ def main():
     vectorstore = prepare_vectorstore(documents, embeddings)  # 벡터스토어 준비
 
     # ChatOpenAI 모델 준비
-    model = ChatOpenAI(model="gpt-4", openai_api_key=api_key)
+    model = ChatOpenAI(model="gpt-4", openai_api_key=api_key),
+
 
     # 대화 맥락 초기화
     context = character_prompt  # 캐릭터의 성격을 담은 시작 메시지
@@ -205,13 +207,13 @@ def main():
             break
 
         # 대화 내용에 맞는 관련 문서 검색 (벡터스토어 사용)
-        search_results = vectorstore.get_relevant_documents(query)  # 'retrieve'를 'get_relevant_documents'로 수정
+        search_results = vectorstore.invoke({"query": user_query})
         context += "\n" + "\n".join([doc.page_content for doc in search_results])  # 맥락에 추가
 
 
         # 모델에 메시지 전달
         messages = [{"role": "system", "content": context}, {"role": "user", "content": query}]
-        response = model(messages)  # 모델에 메시지 전달
+        response = model.invoke(messages)  # 모델에 메시지 전달
 
         # AIMessage 객체의 content에 접근
         print(f"{selected_character.name}: {response.content}")  # 수정된 부분
@@ -253,8 +255,11 @@ def generate_chat_response(character_name, user_query):
     )
 
     # ChatOpenAI 모델 생성 및 응답
-    model = ChatOpenAI(model="gpt-4", openai_api_key=api_key)
+    model = ChatOpenAI(model="gpt-4", openai_api_key=api_key,max_tokens=100)
+    
     messages = [{"role": "system", "content": context}, {"role": "user", "content": user_query}]
-    response = model(messages)
+    response = model.invoke(messages)
+
+    character_response = f"{character_name}: {response.content}"
 
     return response.content
