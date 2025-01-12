@@ -89,13 +89,13 @@ characters = {
 def chatbot_api(request):
     if request.method == "POST":
         data = json.loads(request.body)
-        character_name = data.get("character", "Default")
-        user_query = data.get("message", "")
+        character_name = data.get("character", "Default")  # 요청에서 캐릭터 이름 가져오기
+        user_query = data.get("message", "")  # 요청에서 사용자 메시지 가져오기
 
         try:
-            # LLM의 generate_chat_response 호출
+            # LLM의 generate_chat_response 호출 (캐릭터 이름과 메시지 전달)
             response = generate_chat_response(character_name, user_query)
-            return JsonResponse({"response": response})
+            return JsonResponse({"response": response})  # JSON 응답 반환
         except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
-    return JsonResponse({"error": "Invalid request method"}, status=400)
+            return JsonResponse({"error": str(e)}, status=500)  # 예외 처리
+    return JsonResponse({"error": "Invalid request method"}, status=400)  # POST가 아닌 경우 처리
