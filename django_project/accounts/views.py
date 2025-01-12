@@ -10,6 +10,9 @@ from django.views import View
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
+from .llm import generate_chat_response
+from langchain_openai import OpenAIEmbeddings
+
 
 
 
@@ -86,8 +89,13 @@ characters = {
 def chatbot_api(request):
     if request.method == "POST":
         data = json.loads(request.body)
-        message = data.get('message', '')
-        character = data.get('character', 'Default')
-        response = f"Hello, {character}! You said: {message}"
-        return JsonResponse({"response": response})
+        character_name = data.get("character", "Default")
+        user_query = data.get("message", "")
+
+        try:
+            # LLM의 generate_chat_response 호출
+            response = generate_chat_response(character_name, user_query)
+            return JsonResponse({"response": response})
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
     return JsonResponse({"error": "Invalid request method"}, status=400)

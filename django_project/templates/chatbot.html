@@ -37,7 +37,7 @@
 
                 // 응답 표시
                 if (response.ok) {
-                    chatBox.innerHTML += `<p><strong>${character}:</strong> ${data.response}</p>`;
+                    chatBox.innerHTML += `<p>${data.response}</p>`;
                 } else {
                     chatBox.innerHTML += `<p><strong>Error:</strong> ${data.error}</p>`;
                 }
