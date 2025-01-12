@@ -72,24 +72,22 @@ def chatbot_page(request):
     character = request.GET.get('character', 'Default')
     return render(request, 'chatbot.html', {'character': character})
 
+# 캐릭터 정보 (예제)
+characters = {
+    "Rachel": "I'm Rachel Green, your fashion guru!",
+    "Ross": "Hi, I'm Ross Geller. Let's talk about science and love!",
+    "Monica": "I'm Monica Geller, the perfectionist chef. Need tips?",
+    "Chandler": "Chandler Bing here! Ready for some sarcasm?",
+    "Joey": "Joey Tribbiani! 'How you doin'?'",
+    "Phoebe": "Phoebe Buffay, quirky musician at your service.",
+}
+
+@csrf_exempt
 def chatbot_api(request):
     if request.method == "POST":
         data = json.loads(request.body)
-        user_message = data.get("message", "")
-        character = data.get("character", "Default")
-
-        # 캐릭터별 페르소나 설정
-        personas = {
-            "Rachel": "You are Rachel Green, a fashion enthusiast.",
-            "Ross": "You are Ross Geller, a paleontologist.",
-            "Monica": "You are Monica Geller, a chef.",
-            "Chandler": "You are Chandler Bing, a sarcastic guy.",
-            "Joey": "You are Joey Tribbiani, an actor who loves food.",
-            "Phoebe": "You are Phoebe Buffay, a quirky musician.",
-        }
-
-        persona = personas.get(character, "You are a generic chatbot.")
-        bot_response = f"{persona} You said: {user_message}"
-        return JsonResponse({"response": bot_response})
-
-    return JsonResponse({"error": "Invalid request"}, status=400)
+        message = data.get('message', '')
+        character = data.get('character', 'Default')
+        response = f"Hello, {character}! You said: {message}"
+        return JsonResponse({"response": response})
+    return JsonResponse({"error": "Invalid request method"}, status=400)
