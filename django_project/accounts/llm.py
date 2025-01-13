@@ -49,21 +49,6 @@ def load_scripts(folder):
     return documents
 
 
-def load_slang_data(filepath):
-    """슬랭 데이터를 Document 형식으로 로드"""
-    with open(filepath, 'r', encoding='utf-8') as file:
-        slang_data = json.load(file)
-    return [
-        Document(page_content=f"Term: {item['term']}\nDescription: {item['description']}")
-        for item in slang_data
-    ]
-
-
-def combine_documents(script_docs, slang_docs):
-    """대본과 슬랭 데이터를 결합"""
-    return script_docs + slang_docs
-
-
 def prepare_vectorstore(documents):
     """벡터스토어 준비"""
     splitter = CharacterTextSplitter(chunk_size=300, chunk_overlap=30)
@@ -177,13 +162,11 @@ def generate_chat_response(character_name, user_query):
     # 캐릭터 프롬프트 로드
     character_prompt = load_character_prompt(selected_character.name)
 
-    # 대본 및 슬랭 데이터 로드
+    # 대본 데이터 로드
     script_docs = load_scripts(os.path.join(settings.BASE_DIR, "whatsup", "Friends_Scripts"))
-    slang_docs = load_slang_data(os.path.join(settings.BASE_DIR, "whatsup", "slang_data.json"))
 
-    # 데이터 결합 및 벡터스토어 생성
-    combined_documents = combine_documents(script_docs, slang_docs)
-    documents = [Document(page_content=character_prompt)] + combined_documents
+    # 벡터스토어 생성
+    documents = [Document(page_content=character_prompt)] + script_docs
     vectorstore = prepare_vectorstore(documents)
 
     # 벡터스토어 검색
