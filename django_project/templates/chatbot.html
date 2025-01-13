@@ -1,84 +1,99 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot</title>
+    <title>Voice Recorder</title>
+    
+</head>
+
+<body>
+    <div class="container">
+        <h1>Voice Recorder</h1>
+        <div class="recorder">
+            <button id="recordBtn" class="button record">Record</button>
+            <button id="stopBtn" class="button stop" disabled>Stop</button>
+            <audio id="audioPlayback" controls></audio>
+            <button id="saveBtn" class="button save" disabled>Save as WAV</button>
+            <button id="sendBtn" class="button send" disabled>Send to Server</button>
+        </div>
+        <p id="statusMessage"></p>
+    </div>
+
     <script>
-        // URL에서 캐릭터 이름 가져오기
-        const urlParams = new URLSearchParams(window.location.search);
-        const character = urlParams.get('character');
-
-        // 음성 인식 변수
-        let recognition = null;
-        let isRecognizing = false;
-
-        // 페이지 로드 시 캐릭터 이름 표시
-        window.onload = () => {
-            document.getElementById("character-name").innerText = character || "Default Character";
-        };
-
-        // 메시지 전송 처리
-        async function sendMessage() {
-            const userInput = document.getElementById("user-input").value;
-            const response = await fetch("/chatbot/api/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ message: userInput, character: character }),
+        let mediaRecorder;
+        let audioChunks = [];
+        let audioBlob;
+    
+        const recordBtn = document.getElementById('recordBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const audioPlayback = document.getElementById('audioPlayback');
+        const statusMessage = document.getElementById('statusMessage');
+    
+        recordBtn.addEventListener('click', () => {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    mediaRecorder = new MediaRecorder(stream);
+    
+                    mediaRecorder.start();
+                    audioChunks = [];
+                    recordBtn.disabled = true;
+                    stopBtn.disabled = false;
+                    statusMessage.textContent = "Recording...";
+    
+                    mediaRecorder.addEventListener("dataavailable", event => {
+                        audioChunks.push(event.data);
+                    });
+    
+                    mediaRecorder.addEventListener("stop", () => {
+                        audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        audioPlayback.src = audioUrl;
+                        statusMessage.textContent = "Recording complete. Sending to server...";
+                        recordBtn.disabled = false;
+                        stopBtn.disabled = true;
+    
+                        // Automatically send audio to server
+                        sendAudioToServer(audioBlob);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error accessing microphone:', error);
+                    statusMessage.textContent = "Error: Unable to access microphone.";
+                });
+        });
+    
+        stopBtn.addEventListener('click', () => {
+            if (mediaRecorder && mediaRecorder.state !== "inactive") {
+                mediaRecorder.stop();
+                statusMessage.textContent = "Recording stopped.";
+            }
+        });
+    
+        function sendAudioToServer(audioBlob) {
+            const formData = new FormData();
+            formData.append('audio_file', audioBlob, 'recording.wav');
+    
+            fetch('/save-audio/', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusMessage.textContent = "Audio saved successfully.";
+                } else {
+                    statusMessage.textContent = "Error saving audio.";
+                }
+            })
+            .catch(error => {
+                console.error('Error sending audio to server:', error);
+                statusMessage.textContent = "Error sending audio to server.";
             });
-
-            const data = await response.json();
-            const chatBox = document.getElementById("chat-box");
-            chatBox.innerHTML += `<p><strong>${character}:</strong> ${data.response}</p>`;
-            chatBox.scrollTop = chatBox.scrollHeight; // 스크롤 아래로 이동
-        }
-
-        // TTS 음성 입력 처리
-        function toggleSpeechRecognition() {
-            const micButton = document.getElementById("mic-button");
-
-            if (!recognition) {
-                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-                recognition.lang = 'en-US'; // 언어 설정
-
-                recognition.onresult = (event) => {
-                    const transcript = event.results[0][0].transcript;
-                    document.getElementById("user-input").value = transcript;
-                };
-
-                recognition.onerror = (event) => {
-                    alert("Speech recognition error: " + event.error);
-                };
-
-                recognition.onend = () => {
-                    isRecognizing = false;
-                    micButton.src = "/static/images/microphone-icon.jpg";
-                };
-            }
-
-            if (isRecognizing) {
-                recognition.stop();
-                isRecognizing = false;
-                micButton.src = "/static/images/microphone-icon.jpg"; // 마이크 아이콘
-            } else {
-                recognition.start();
-                isRecognizing = true;
-                micButton.src = "/static/images/off-mic-icon.jpg"; // 마이크 끔 아이콘
-            }
         }
     </script>
-</head>
-<body>
-    <h1>Chatbot with <span id="character-name"></span></h1>
-    <div id="chat-box" style="border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto;"></div>
-    <div style="display: flex; gap: 10px; margin-top: 10px;">
-        <input id="user-input" type="text" placeholder="Type your message here" style="flex: 1;">
-        <button onclick="toggleSpeechRecognition()" style="background: none; border: none; cursor: pointer;">
-            <img id="mic-button" src="/static/images/microphone-icon.jpg" alt="Mic" style="width: 30px; height: 30px;">
-        </button>
-        <button onclick="sendMessage()">Send</button>
-    </div>
+    
 </body>
+
 </html>

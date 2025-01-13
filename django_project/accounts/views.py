@@ -3,13 +3,24 @@ from django.http import JsonResponse, HttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import UserSerializer
+from .serializers import UserSerializer, AudioUploadSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
+from django.core.files.storage import default_storage
 from django.views import View
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
 import json
+from .STT import AudioRecorder
+from openai import OpenAI
+from dotenv import load_dotenv
+import pyaudio
+import wave
+import os
+import base64
+import uuid
+from datetime import datetime
 
 
 
@@ -63,22 +74,6 @@ def chatbot_api(request):
         return JsonResponse({"response": bot_response})
     return JsonResponse({"error": "Invalid request method"}, status=400)
 
-<<<<<<< HEAD
-
-# accounts 안에 TTS.py 만들어서 안에 class OpenaiStt, class OpenaiTts 만든 후 불러오기
-
-from django_project.accounts.TTS import OpenaiTts, OpenaiStt
-
-
-# 불러온 클래스 상속시키기
-def Stt(request):
-    pass
-
-def Tts(request):
-    pass
-
-# chatbot.html에서 사용할수있게 만들기(스태틱에 저장했다가 곧 삭제 시키기)
-=======
 def friends_selection(request):
     # 등장인물 선택 화면 렌더링
     return render(request, 'friends_selection.html')
@@ -87,6 +82,8 @@ def chatbot_page(request):
     # URL 쿼리 파라미터에서 캐릭터 이름 가져오기
     character = request.GET.get('character', 'Default')
     return render(request, 'chatbot.html', {'character': character})
+
+    
 
 def chatbot_api(request):
     if request.method == "POST":
@@ -109,4 +106,29 @@ def chatbot_api(request):
         return JsonResponse({"response": bot_response})
 
     return JsonResponse({"error": "Invalid request"}, status=400)
->>>>>>> Chan
+
+
+
+@csrf_exempt
+def save_audio(request):
+    if request.method == 'POST' and request.FILES.get('audio_file'):
+        audio_file = request.FILES['audio_file']
+
+        # Generate a unique file name
+        unique_id = uuid.uuid4().hex  # Unique ID for the file
+        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')  # Current timestamp
+        file_extension = os.path.splitext(audio_file.name)[-1]  # Extract file extension
+        unique_filename = f"audio_{timestamp}_{unique_id}{file_extension}"
+
+        save_path = os.path.join(settings.BASE_DIR, 'static/audios', unique_filename)
+
+        # Ensure the directory exists
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+
+        # Save the file
+        with open(save_path, 'wb') as f:
+            for chunk in audio_file.chunks():
+                f.write(chunk)
+
+        return JsonResponse({'success': True, 'message': 'Audio saved successfully.', 'filename': unique_filename})
+    return JsonResponse({'success': False, 'message': 'Invalid request.'})

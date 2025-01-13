@@ -75,17 +75,17 @@ recorder = AudioRecorder(
 
 
 
-# 사용방법
-recorder.record()
-print("Start recording")
-recorder.save()
-recorder.terminate()
-print("Recording has been saved to 'recording.wav'.")
+# # 사용방법
+# recorder.record()
+# print("Start recording")
+# recorder.save()
+# recorder.terminate()
+# print("Recording has been saved to 'recording.wav'.")
 
-transcriber = AudioTranscriber()
-print("Starting transcription...")
-result = transcriber.transcribe(model="whisper-1", language=["en", "kr"])
-print(result.text)
+# transcriber = AudioTranscriber()
+# print("Starting transcription...")
+# result = transcriber.transcribe(model="whisper-1", language=["en", "kr"])
+# print(result.text)
 
 
 

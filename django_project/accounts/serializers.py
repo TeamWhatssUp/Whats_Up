@@ -24,3 +24,6 @@ class InitialSetupSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['age', 'gender', 'major']
+
+class AudioUploadSerializer(serializers.Serializer):
+    audio = serializers.FileField()
