@@ -149,7 +149,7 @@ def create_characters():
 ]
 
 
-def generate_chat_response(character_name, user_query):
+def generate_chat_response(character_name, user_query, summary_threshold=500):
     """챗봇 응답을 생성하는 함수"""
     # 캐릭터 생성 및 선택
     characters = create_characters()
@@ -178,4 +178,14 @@ def generate_chat_response(character_name, user_query):
     messages = [{"role": "system", "content": context}, {"role": "user", "content": user_query}]
     response = model.invoke(messages)
 
-    return response.content
+    # 응답 요약 (응답이 max_token값을 초과할 경우)
+    full_response = response.content
+    if len(full_response) > summary_threshold:
+        summary_request = [
+            {"role": "system", "content": "Please summarize the following content:"},
+            {"role": "user", "content": full_response}
+        ]
+        summary_response = model.invoke(summary_request)
+        return summary_response.content
+
+    return full_response
