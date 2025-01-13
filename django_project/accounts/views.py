@@ -10,6 +10,9 @@ from django.views import View
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
+from .llm import generate_chat_response
+from langchain_openai import OpenAIEmbeddings
+
 
 
 
@@ -62,3 +65,37 @@ def chatbot_api(request):
         bot_response = f"You said: {user_message}"
         return JsonResponse({"response": bot_response})
     return JsonResponse({"error": "Invalid request method"}, status=400)
+
+def friends_selection(request):
+    # 등장인물 선택 화면 렌더링
+    return render(request, 'friends_selection.html')
+
+def chatbot_page(request):
+    # URL 쿼리 파라미터에서 캐릭터 이름 가져오기
+    character = request.GET.get('character', 'Default')
+    return render(request, 'chatbot.html', {'character': character})
+
+# 캐릭터 정보 (예제)
+characters = {
+    "Rachel": "I'm Rachel Green, your fashion guru!",
+    "Ross": "Hi, I'm Ross Geller. Let's talk about science and love!",
+    "Monica": "I'm Monica Geller, the perfectionist chef. Need tips?",
+    "Chandler": "Chandler Bing here! Ready for some sarcasm?",
+    "Joey": "Joey Tribbiani! 'How you doin'?'",
+    "Phoebe": "Phoebe Buffay, quirky musician at your service.",
+}
+
+@csrf_exempt
+def chatbot_api(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        character_name = data.get("character", "Default")  # 요청에서 캐릭터 이름 가져오기
+        user_query = data.get("message", "")  # 요청에서 사용자 메시지 가져오기
+
+        try:
+            # LLM의 generate_chat_response 호출 (캐릭터 이름과 메시지 전달)
+            response = generate_chat_response(character_name, user_query)
+            return JsonResponse({"response": response})  # JSON 응답 반환
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)  # 예외 처리
+    return JsonResponse({"error": "Invalid request method"}, status=400)  # POST가 아닌 경우 처리
