@@ -57,7 +57,7 @@ def prepare_vectorstore(documents):
     return vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 3})
 
 
-# Character 클래스 정의
+# 캐릭터 클래스 정의
 class Character:
     def __init__(self, name, age, job, hobbies, skills, personality, catchphrases, conversation_patterns, intro=None, relationships=None):
         self.name = name
@@ -162,6 +162,15 @@ def generate_chat_response(character_name, user_query, summary_threshold=500):
     # 캐릭터 프롬프트 로드
     character_prompt = load_character_prompt(selected_character.name)
 
+    # 캐릭터 프롬프트 생성 (캐릭터 클래스 포함)
+    character_prompt = f"""
+    You are {selected_character.name}, a {selected_character.job}. 
+    Your personality: {selected_character.personality}.
+    Your catchphrases: {" | ".join(selected_character.catchphrases)}.
+    Your hobbies: {", ".join(selected_character.hobbies)}.
+    You are having a conversation with a friend. Be {", ".join(selected_character.conversation_patterns)}.
+    """
+
     # 대본 데이터 로드
     script_docs = load_scripts(os.path.join(settings.BASE_DIR, "whatsup", "Friends_Scripts"))
 
@@ -170,22 +179,12 @@ def generate_chat_response(character_name, user_query, summary_threshold=500):
     vectorstore = prepare_vectorstore(documents)
 
     # 벡터스토어 검색
-    search_results = vectorstore.get_relevant_documents(user_query)
+    search_results = vectorstore.get_relevant_documents(user_query)[:2]
     context = character_prompt + "\n" + "\n".join(doc.page_content for doc in search_results)
 
     # ChatOpenAI 모델 생성 및 호출
-    model = ChatOpenAI(model="gpt-4", openai_api_key=api_key, max_tokens=100)
+    model = ChatOpenAI(model="gpt-4", openai_api_key=api_key, max_tokens=300)
     messages = [{"role": "system", "content": context}, {"role": "user", "content": user_query}]
     response = model.invoke(messages)
 
-    # 응답 요약 (응답이 max_token값을 초과할 경우)
-    full_response = response.content
-    if len(full_response) > summary_threshold:
-        summary_request = [
-            {"role": "system", "content": "Please summarize the following content:"},
-            {"role": "user", "content": full_response}
-        ]
-        summary_response = model.invoke(summary_request)
-        return summary_response.content
-
-    return full_response
+    return response.content
