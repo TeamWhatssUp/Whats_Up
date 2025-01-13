@@ -9,6 +9,7 @@ from django.conf import settings
 import json
 
 
+
 # .env 파일에서 환경 변수 로드
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
@@ -51,7 +52,7 @@ def load_scripts(folder):
 
 def prepare_vectorstore(documents):
     """벡터스토어 준비"""
-    splitter = CharacterTextSplitter(chunk_size=300, chunk_overlap=30)
+    splitter = CharacterTextSplitter(chunk_size=900, chunk_overlap=90)
     split_docs = splitter.split_documents(documents)
     vectorstore = FAISS.from_documents(split_docs, embeddings)
     return vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 3})
@@ -183,8 +184,9 @@ def generate_chat_response(character_name, user_query, summary_threshold=500):
     context = character_prompt + "\n" + "\n".join(doc.page_content for doc in search_results)
 
     # ChatOpenAI 모델 생성 및 호출
-    model = ChatOpenAI(model="gpt-4", openai_api_key=api_key, max_tokens=300)
+    model = ChatOpenAI(model="gpt-4", openai_api_key=api_key, max_tokens=200,temperature=0,)
     messages = [{"role": "system", "content": context}, {"role": "user", "content": user_query}]
     response = model.invoke(messages)
 
     return response.content
+
