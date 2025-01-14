@@ -23,7 +23,7 @@
     </div>
 
     <script>
-<<<<<<< HEAD
+
         // URL에서 캐릭터 이름 가져오기
         const urlParams = new URLSearchParams(window.location.search);
         const character = urlParams.get('character');
@@ -101,7 +101,7 @@
                 isRecognizing = true;
                 micButton.src = "/static/images/off-mic-icon.jpg"; // 마이크 끔 아이콘
             }
-=======
+
         let mediaRecorder;
         let audioChunks = [];
         let audioBlob;
@@ -174,7 +174,7 @@
                 console.error('Error sending audio to server:', error);
                 statusMessage.textContent = "Error sending audio to server.";
             });
->>>>>>> Alex
+
         }
     </script>
 </body>
