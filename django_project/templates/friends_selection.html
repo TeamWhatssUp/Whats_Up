@@ -41,10 +41,33 @@
         .character button:hover {
             background-color: #0056b3;
         }
+        .profile-button {
+            text-align: right;
+            margin-top: 20px;
+            margin-right: 20px;
+        }
+        .profile-button button {
+            padding: 10px 15px;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        .profile-button button:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
     <h1>Select Your Favorite Friend</h1>
+
+    <!-- 프로필 보기 버튼 -->
+    <div class="profile-button">
+        <button onclick="location.href='/account/profile/'">프로필 보기</button>
+    </div>
+
     <div class="grid">
         <div class="character">
             <img src="/static/images/rachel.jpg" alt="Rachel">

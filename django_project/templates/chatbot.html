@@ -21,21 +21,36 @@
         // 메시지 전송 처리
         async function sendMessage() {
             const userInput = document.getElementById("user-input").value;
-            const response = await fetch("/chatbot/api/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ message: userInput, character: character }),
-            });
-
-            const data = await response.json();
             const chatBox = document.getElementById("chat-box");
-            chatBox.innerHTML += `<p><strong>${character}:</strong> ${data.response}</p>`;
-            chatBox.scrollTop = chatBox.scrollHeight; // 스크롤 아래로 이동
+
+            // 서버로 메시지 전송
+            try {
+                const response = await fetch("http://127.0.0.1:8000/chatbot/api/", { // 절대 경로 사용
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ message: userInput, character: character }),
+                });
+
+                const data = await response.json();
+
+                // 응답 표시
+                if (response.ok) {
+                    chatBox.innerHTML += `<p>${data.response}</p>`;
+                } else {
+                    chatBox.innerHTML += `<p><strong>Error:</strong> ${data.error}</p>`;
+                }
+
+                // 입력 필드 초기화
+                document.getElementById("user-input").value = "";
+                chatBox.scrollTop = chatBox.scrollHeight; // 스크롤 아래로 이동
+            } catch (error) {
+                chatBox.innerHTML += `<p><strong>Error:</strong> Unable to connect to the server.</p>`;
+            }
         }
 
-        // TTS 음성 입력 처리
+        // 음성 입력 처리
         function toggleSpeechRecognition() {
             const micButton = document.getElementById("mic-button");
 
