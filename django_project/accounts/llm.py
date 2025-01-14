@@ -9,6 +9,7 @@ from django.conf import settings
 import json
 
 
+
 # .env 파일에서 환경 변수 로드
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
@@ -49,30 +50,15 @@ def load_scripts(folder):
     return documents
 
 
-def load_slang_data(filepath):
-    """슬랭 데이터를 Document 형식으로 로드"""
-    with open(filepath, 'r', encoding='utf-8') as file:
-        slang_data = json.load(file)
-    return [
-        Document(page_content=f"Term: {item['term']}\nDescription: {item['description']}")
-        for item in slang_data
-    ]
-
-
-def combine_documents(script_docs, slang_docs):
-    """대본과 슬랭 데이터를 결합"""
-    return script_docs + slang_docs
-
-
 def prepare_vectorstore(documents):
     """벡터스토어 준비"""
-    splitter = CharacterTextSplitter(chunk_size=300, chunk_overlap=30)
+    splitter = CharacterTextSplitter(chunk_size=900, chunk_overlap=90)
     split_docs = splitter.split_documents(documents)
     vectorstore = FAISS.from_documents(split_docs, embeddings)
     return vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 3})
 
 
-# Character 클래스 정의
+# 캐릭터 클래스 정의
 class Character:
     def __init__(self, name, age, job, hobbies, skills, personality, catchphrases, conversation_patterns, intro=None, relationships=None):
         self.name = name
@@ -164,7 +150,7 @@ def create_characters():
 ]
 
 
-def generate_chat_response(character_name, user_query):
+def generate_chat_response(character_name, user_query, summary_threshold=500):
     """챗봇 응답을 생성하는 함수"""
     # 캐릭터 생성 및 선택
     characters = create_characters()
@@ -177,22 +163,30 @@ def generate_chat_response(character_name, user_query):
     # 캐릭터 프롬프트 로드
     character_prompt = load_character_prompt(selected_character.name)
 
-    # 대본 및 슬랭 데이터 로드
-    script_docs = load_scripts(os.path.join(settings.BASE_DIR, "whatsup", "Friends_Scripts"))
-    slang_docs = load_slang_data(os.path.join(settings.BASE_DIR, "whatsup", "slang_data.json"))
+    # 캐릭터 프롬프트 생성 (캐릭터 클래스 포함)
+    character_prompt = f"""
+    You are {selected_character.name}, a {selected_character.job}. 
+    Your personality: {selected_character.personality}.
+    Your catchphrases: {" | ".join(selected_character.catchphrases)}.
+    Your hobbies: {", ".join(selected_character.hobbies)}.
+    You are having a conversation with a friend. Be {", ".join(selected_character.conversation_patterns)}.
+    """
 
-    # 데이터 결합 및 벡터스토어 생성
-    combined_documents = combine_documents(script_docs, slang_docs)
-    documents = [Document(page_content=character_prompt)] + combined_documents
+    # 대본 데이터 로드
+    script_docs = load_scripts(os.path.join(settings.BASE_DIR, "whatsup", "Friends_Scripts"))
+
+    # 벡터스토어 생성
+    documents = [Document(page_content=character_prompt)] + script_docs
     vectorstore = prepare_vectorstore(documents)
 
     # 벡터스토어 검색
-    search_results = vectorstore.get_relevant_documents(user_query)
+    search_results = vectorstore.get_relevant_documents(user_query)[:2]
     context = character_prompt + "\n" + "\n".join(doc.page_content for doc in search_results)
 
     # ChatOpenAI 모델 생성 및 호출
-    model = ChatOpenAI(model="gpt-4", openai_api_key=api_key, max_tokens=100)
+    model = ChatOpenAI(model="gpt-4", openai_api_key=api_key, max_tokens=200,temperature=0,)
     messages = [{"role": "system", "content": context}, {"role": "user", "content": user_query}]
     response = model.invoke(messages)
 
     return response.content
+
