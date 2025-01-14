@@ -40,6 +40,10 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     "accounts",
+<<<<<<< HEAD
+=======
+    "main",
+>>>>>>> Jack
 ]
 
 MIDDLEWARE = [
@@ -121,7 +125,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
+<<<<<<< HEAD
 STATIC_URL = "/static/"
+=======
+STATIC_URL = "static/"
+>>>>>>> Jack
 
 STATICFILES_DIRS = [
     BASE_DIR / "static",  # static 폴더를 정적 파일로 설정
