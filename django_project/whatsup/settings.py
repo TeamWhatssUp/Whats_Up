@@ -151,4 +151,3 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': False,               # Refresh Token 재발급 여부
     'BLACKLIST_AFTER_ROTATION': True,             # Refresh Token 만료 처리 여부
 }
-
