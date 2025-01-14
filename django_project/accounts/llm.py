@@ -9,6 +9,7 @@ from django.conf import settings
 import json
 
 
+
 # .env 파일에서 환경 변수 로드
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
@@ -188,3 +189,4 @@ def generate_chat_response(character_name, user_query, summary_threshold=500):
     response = model.invoke(messages)
 
     return response.content
+
