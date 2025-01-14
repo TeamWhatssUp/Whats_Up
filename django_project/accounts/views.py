@@ -21,6 +21,8 @@ import os
 import base64
 import uuid
 from datetime import datetime
+import logging
+
 
 
 
@@ -109,26 +111,82 @@ def chatbot_api(request):
 
 
 
+load_dotenv()
+
+client = OpenAI(
+    api_key = os.getenv("OPENAI_API_KEY")
+)
+
+logger = logging.getLogger(__name__)
+
 @csrf_exempt
 def save_audio(request):
     if request.method == 'POST' and request.FILES.get('audio_file'):
         audio_file = request.FILES['audio_file']
 
         # Generate a unique file name
-        unique_id = uuid.uuid4().hex  # Unique ID for the file
-        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')  # Current timestamp
-        file_extension = os.path.splitext(audio_file.name)[-1]  # Extract file extension
+        unique_id = uuid.uuid4().hex
+        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+        file_extension = os.path.splitext(audio_file.name)[-1]
         unique_filename = f"audio_{timestamp}_{unique_id}{file_extension}"
 
         save_path = os.path.join(settings.BASE_DIR, 'static/audios', unique_filename)
 
+        # Debug: Log the generated file path and name
+        logger.debug(f"Generated file path: {save_path}")
+
         # Ensure the directory exists
-        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        try:
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        except Exception as e:
+            logger.error(f"Error creating directories: {e}")
+            return JsonResponse({'success': False, 'message': 'Error creating directories.'})
 
         # Save the file
-        with open(save_path, 'wb') as f:
-            for chunk in audio_file.chunks():
-                f.write(chunk)
+        try:
+            with open(save_path, 'wb') as f:
+                for chunk in audio_file.chunks():
+                    f.write(chunk)
+        except Exception as e:
+            logger.error(f"Error saving the audio file: {e}")
+            return JsonResponse({'success': False, 'message': 'Error saving audio file.'})
 
-        return JsonResponse({'success': True, 'message': 'Audio saved successfully.', 'filename': unique_filename})
+        # Call Whisper API to transcribe the audio
+        transcription = transcribe_audio_with_whisper(save_path)
+
+        if transcription:
+            return JsonResponse({
+                'success': True,
+                'message': 'Audio saved and transcribed successfully.',
+                'filename': unique_filename,
+                'transcription': transcription
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'message': 'Audio saved, but transcription failed.'
+            })
+
     return JsonResponse({'success': False, 'message': 'Invalid request.'})
+
+def transcribe_audio_with_whisper(audio_path):
+    try:
+        # Open the audio file
+        with open(audio_path, 'rb') as audio_file:
+            # Send the audio file to OpenAI Whisper API
+            response = client.audio.transcriptions.create(
+                model="whisper-1",  # Whisper 모델 사용
+                file=audio_file,
+                language=["en", "kr"]  # 언어 설정 (영어)
+            )
+        
+        # Log the API response to check the returned data
+        logger.debug(f"Whisper API response: {response}")
+
+        # Extract the transcription from the response
+        transcription = response.text
+        return transcription
+
+    except Exception as e:
+        logger.error(f"Error during transcription: {e}")
+        return None

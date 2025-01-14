@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Voice Recorder</title>
-    
 </head>
 
 <body>
@@ -19,6 +18,10 @@
             <button id="sendBtn" class="button send" disabled>Send to Server</button>
         </div>
         <p id="statusMessage"></p>
+        <div id="transcriptionResult">
+            <h3>Transcription:</h3>
+            <p id="transcriptionText"></p>
+        </div>
     </div>
 
     <script>
@@ -30,6 +33,7 @@
         const stopBtn = document.getElementById('stopBtn');
         const audioPlayback = document.getElementById('audioPlayback');
         const statusMessage = document.getElementById('statusMessage');
+        const transcriptionText = document.getElementById('transcriptionText');
     
         recordBtn.addEventListener('click', () => {
             navigator.mediaDevices.getUserMedia({ audio: true })
@@ -54,7 +58,7 @@
                         recordBtn.disabled = false;
                         stopBtn.disabled = true;
     
-                        // Automatically send audio to server
+                        // Send the audio to the server and process the transcription
                         sendAudioToServer(audioBlob);
                     });
                 })
@@ -82,9 +86,11 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    statusMessage.textContent = "Audio saved successfully.";
+                    statusMessage.textContent = "Audio saved and transcribed successfully.";
+                    // Display the transcription
+                    transcriptionText.textContent = data.transcription;
                 } else {
-                    statusMessage.textContent = "Error saving audio.";
+                    statusMessage.textContent = data.message;
                 }
             })
             .catch(error => {
@@ -93,7 +99,7 @@
             });
         }
     </script>
-    
 </body>
 
 </html>
+
