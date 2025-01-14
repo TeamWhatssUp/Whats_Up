@@ -35,16 +35,24 @@
 
                 const data = await response.json();
 
-                // 응답 표시
                 if (response.ok) {
-                    chatBox.innerHTML += `<p>${data.response}</p>`;
+                    chatBox.innerHTML += `<p><strong>Chatbot:</strong> ${data.response}</p>`;
+                    
+                    // TTS 처리
+                    if (data.audio_url) {
+                        chatBox.innerHTML += `
+                            <audio controls>
+                                <source src="${data.audio_url}" type="audio/mpeg">
+                                Your browser does not support the audio element.
+                            </audio>
+                        `;
+                    }
                 } else {
                     chatBox.innerHTML += `<p><strong>Error:</strong> ${data.error}</p>`;
                 }
 
-                // 입력 필드 초기화
                 document.getElementById("user-input").value = "";
-                chatBox.scrollTop = chatBox.scrollHeight; // 스크롤 아래로 이동
+                chatBox.scrollTop = chatBox.scrollHeight;
             } catch (error) {
                 chatBox.innerHTML += `<p><strong>Error:</strong> Unable to connect to the server.</p>`;
             }

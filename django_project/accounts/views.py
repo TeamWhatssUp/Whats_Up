@@ -23,7 +23,8 @@ import base64
 import uuid
 from datetime import datetime
 import logging
-
+import time
+from pathlib import Path
 
 
 
@@ -96,27 +97,45 @@ characters = {
     "Phoebe": "Phoebe Buffay, quirky musician at your service.",
 }
 
-@csrf_exempt
-def chatbot_api(request):
-    if request.method == "POST":
-        data = json.loads(request.body)
-        character_name = data.get("character", "Default")  # 요청에서 캐릭터 이름 가져오기
-        user_query = data.get("message", "")  # 요청에서 사용자 메시지 가져오기
-
-        try:
-            # LLM의 generate_chat_response 호출 (캐릭터 이름과 메시지 전달)
-            response = generate_chat_response(character_name, user_query)
-            return JsonResponse({"response": response})  # JSON 응답 반환
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)  # 예외 처리
-    return JsonResponse({"error": "Invalid request method"}, status=400)  # POST가 아닌 경우 처리
-
-
 load_dotenv()
 
 client = OpenAI(
     api_key = os.getenv("OPENAI_API_KEY")
 )
+
+
+@csrf_exempt
+def chatbot_api(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            message = data.get("message", "")
+            character = data.get("character", "Default Character")
+
+            # OpenAI GPT 처리 (단순 메시지 에코로 대체)
+            response_text = f"{message}"
+
+            # OpenAI TTS 생성
+            audio_filename = f"response_{int(time.time())}.mp3"
+            audio_path = os.path.join(settings.BASE_DIR, 'static/audios', audio_filename)
+
+            response = client.openai.audio.speech.create(
+                model="tts-1-hd",
+                voice="alloy",  # 선택 가능한 목소리: alloy, ash, coral 등
+                input=response_text
+            )
+            response.stream_to_file(audio_path)
+
+            # 오디오 URL 생성
+            audio_url = f"{settings.BASE_DIR}static/audios/{audio_filename}"
+
+            return JsonResponse({"response": response_text, "audio_url": audio_url})
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Invalid request method"}, status=400)
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -177,7 +196,7 @@ def transcribe_audio_with_whisper(audio_path):
             response = client.audio.transcriptions.create(
                 model="whisper-1",  # Whisper 모델 사용
                 file=audio_file,
-                language=["en", "kr"]  # 언어 설정 (영어)
+                language="en", # 언어 설정
             )
         
         # Log the API response to check the returned data

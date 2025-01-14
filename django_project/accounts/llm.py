@@ -184,7 +184,7 @@ def generate_chat_response(character_name, user_query, summary_threshold=500):
     context = character_prompt + "\n" + "\n".join(doc.page_content for doc in search_results)
 
     # ChatOpenAI 모델 생성 및 호출
-    model = ChatOpenAI(model="gpt-4", openai_api_key=api_key, max_tokens=200,temperature=0,)
+    model = ChatOpenAI(model="gpt-4", openai_api_key=api_key, max_tokens=100,temperature=0,)
     messages = [{"role": "system", "content": context}, {"role": "user", "content": user_query}]
     response = model.invoke(messages)
 
