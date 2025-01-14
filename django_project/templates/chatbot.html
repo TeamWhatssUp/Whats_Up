@@ -1,10 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot</title>
+    <title>Voice Recorder</title>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Voice Recorder</h1>
+        <div class="recorder">
+            <button id="recordBtn" class="button record">Record</button>
+            <button id="stopBtn" class="button stop" disabled>Stop</button>
+            <audio id="audioPlayback" controls></audio>
+        </div>
+        <p id="statusMessage"></p>
+        <div id="transcriptionResult">
+            <h3>Transcription:</h3>
+            <p id="transcriptionText"></p>
+        </div>
+    </div>
+
     <script>
+<<<<<<< HEAD
         // URL에서 캐릭터 이름 가져오기
         const urlParams = new URLSearchParams(window.location.search);
         const character = urlParams.get('character');
@@ -82,18 +101,83 @@
                 isRecognizing = true;
                 micButton.src = "/static/images/off-mic-icon.jpg"; // 마이크 끔 아이콘
             }
+=======
+        let mediaRecorder;
+        let audioChunks = [];
+        let audioBlob;
+    
+        const recordBtn = document.getElementById('recordBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const audioPlayback = document.getElementById('audioPlayback');
+        const statusMessage = document.getElementById('statusMessage');
+        const transcriptionText = document.getElementById('transcriptionText');
+    
+        recordBtn.addEventListener('click', () => {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    mediaRecorder = new MediaRecorder(stream);
+    
+                    mediaRecorder.start();
+                    audioChunks = [];
+                    recordBtn.disabled = true;
+                    stopBtn.disabled = false;
+                    statusMessage.textContent = "Recording...";
+    
+                    mediaRecorder.addEventListener("dataavailable", event => {
+                        audioChunks.push(event.data);
+                    });
+    
+                    mediaRecorder.addEventListener("stop", () => {
+                        audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        audioPlayback.src = audioUrl;
+                        statusMessage.textContent = "Recording complete. Sending to server...";
+                        recordBtn.disabled = false;
+                        stopBtn.disabled = true;
+    
+                        // Send the audio to the server and process the transcription
+                        sendAudioToServer(audioBlob);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error accessing microphone:', error);
+                    statusMessage.textContent = "Error: Unable to access microphone.";
+                });
+        });
+    
+        stopBtn.addEventListener('click', () => {
+            if (mediaRecorder && mediaRecorder.state !== "inactive") {
+                mediaRecorder.stop();
+                statusMessage.textContent = "Recording stopped.";
+            }
+        });
+    
+        function sendAudioToServer(audioBlob) {
+            const formData = new FormData();
+            formData.append('audio_file', audioBlob, 'recording.wav');
+    
+            fetch('/save-audio/', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusMessage.textContent = "Audio saved and transcribed successfully.";
+                    // Display the transcription
+                    transcriptionText.textContent = data.transcription;
+                } else {
+                    statusMessage.textContent = data.message;
+                }
+            })
+            .catch(error => {
+                console.error('Error sending audio to server:', error);
+                statusMessage.textContent = "Error sending audio to server.";
+            });
+>>>>>>> Alex
         }
     </script>
-</head>
-<body>
-    <h1>Chatbot with <span id="character-name"></span></h1>
-    <div id="chat-box" style="border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto;"></div>
-    <div style="display: flex; gap: 10px; margin-top: 10px;">
-        <input id="user-input" type="text" placeholder="Type your message here" style="flex: 1;">
-        <button onclick="toggleSpeechRecognition()" style="background: none; border: none; cursor: pointer;">
-            <img id="mic-button" src="/static/images/microphone-icon.jpg" alt="Mic" style="width: 30px; height: 30px;">
-        </button>
-        <button onclick="sendMessage()">Send</button>
-    </div>
 </body>
+
 </html>
+

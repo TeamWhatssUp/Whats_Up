@@ -8,9 +8,15 @@ from .views import (
     register_page,
     chatbot_page,
     friends_selection,
+<<<<<<< HEAD
     chatbot_api,
+=======
+    save_audio
+
+>>>>>>> Alex
 )
 from .views import chatbot_api
+from . import views
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 urlpatterns = [
@@ -23,6 +29,11 @@ urlpatterns = [
     path('api/', chatbot_api, name='chatbot_api'),
     path('', index, name='index'),
     path('friends-selection/', friends_selection, name='friends_selection'),  # 등장인물 선택 화면
+<<<<<<< HEAD
     path('chatbot/api/', chatbot_api, name='chatbot_api'),
+=======
+    path('save-audio/', save_audio, name='save_audio'),
+
+>>>>>>> Alex
 
 ]
