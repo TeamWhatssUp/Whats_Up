@@ -7,5 +7,4 @@ urlpatterns = [
     path("account/", include('accounts.urls')),
     path("chatbot/", chatbot_page, name='chatbot_page'),
     path('friends-selection/', friends_selection, name='friends_selection'),
-    path('', include('accounts.urls'))
 ]
