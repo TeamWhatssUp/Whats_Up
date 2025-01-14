@@ -9,7 +9,7 @@ from .views import (
     chatbot_page,
     friends_selection,
     chatbot_api,
-    save_audio
+    
 
 )
 from .views import chatbot_api
@@ -29,7 +29,7 @@ urlpatterns = [
     path('', index, name='index'),
     path('friends-selection/', friends_selection, name='friends_selection'),  # 등장인물 선택 화면
     path('chatbot/api/', chatbot_api, name='chatbot_api'),
-    path('save-audio/', save_audio, name='save_audio'),
+    
 
 
 ]

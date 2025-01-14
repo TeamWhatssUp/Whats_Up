@@ -1,29 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice Recorder</title>
-</head>
-
-<body>
-    <div class="container">
-        <h1>Voice Recorder</h1>
-        <div class="recorder">
-            <button id="recordBtn" class="button record">Record</button>
-            <button id="stopBtn" class="button stop" disabled>Stop</button>
-            <audio id="audioPlayback" controls></audio>
-        </div>
-        <p id="statusMessage"></p>
-        <div id="transcriptionResult">
-            <h3>Transcription:</h3>
-            <p id="transcriptionText"></p>
-        </div>
-    </div>
-
+    <title>Chatbot</title>
     <script>
-
         // URL에서 캐릭터 이름 가져오기
         const urlParams = new URLSearchParams(window.location.search);
         const character = urlParams.get('character');
@@ -38,13 +19,13 @@
         };
 
         // 메시지 전송 처리
-        async function sendMessage() {
-            const userInput = document.getElementById("user-input").value;
+        async function sendMessage(message) {
+            const userInput = message || document.getElementById("user-input").value;
             const chatBox = document.getElementById("chat-box");
 
             // 서버로 메시지 전송
             try {
-                const response = await fetch("http://127.0.0.1:8000/chatbot/api/", { // 절대 경로 사용
+                const response = await fetch("http://127.0.0.1:8000/chatbot/api/", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -68,9 +49,29 @@
                 chatBox.innerHTML += `<p><strong>Error:</strong> Unable to connect to the server.</p>`;
             }
         }
-
-
-
+    </script>
+</head>
+<body>
+    <h1>Chatbot with <span id="character-name"></span></h1>
+    <div id="chat-box" style="border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto;"></div>
+    <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <input id="user-input" type="text" placeholder="Type your message here" style="flex: 1;">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+    <div class="container">
+        
+        <div class="recorder">
+            <button id="recordBtn" class="button record">Record</button>
+            <button id="stopBtn" class="button stop" disabled>Stop</button>
+            <audio id="audioPlayback" controls></audio>
+        </div>
+        <p id="statusMessage"></p>
+        <div id="transcriptionResult">
+            <h3>Transcription:</h3>
+            <p id="transcriptionText"></p>
+        </div>
+    </div>
+    <script>
         let mediaRecorder;
         let audioChunks = [];
         let audioBlob;
@@ -125,7 +126,7 @@
             const formData = new FormData();
             formData.append('audio_file', audioBlob, 'recording.wav');
     
-            fetch('/save-audio/', {
+            fetch('save-audio/', {
                 method: 'POST',
                 body: formData,
             })
@@ -135,6 +136,9 @@
                     statusMessage.textContent = "Audio saved and transcribed successfully.";
                     // Display the transcription
                     transcriptionText.textContent = data.transcription;
+
+                    // 자동으로 텍스트를 채팅으로 전송
+                    sendMessage(data.transcription);
                 } else {
                     statusMessage.textContent = data.message;
                 }
@@ -143,14 +147,7 @@
                 console.error('Error sending audio to server:', error);
                 statusMessage.textContent = "Error sending audio to server.";
             });
-
         }
     </script>
 </body>
-
 </html>
-
-
-
-
-
