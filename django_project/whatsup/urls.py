@@ -8,4 +8,5 @@ urlpatterns = [
     path("chatbot/", chatbot_page, name='chatbot_page'),
     path('friends-selection/', friends_selection, name='friends_selection'),
     path('chatbot/api/', chatbot_api, name='chatbot_api'),  # chatbot/api 경로 직접 연결
+    path('', include('main.urls')),
 ]
