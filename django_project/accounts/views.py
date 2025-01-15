@@ -15,6 +15,7 @@ import json
 from .llm import generate_chat_response
 from langchain_openai import OpenAIEmbeddings
 from openai import OpenAI
+from openai import OpenAIError
 from dotenv import load_dotenv
 import pyaudio
 import wave
@@ -107,35 +108,46 @@ client = OpenAI(
 @csrf_exempt
 def chatbot_api(request):
     if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            message = data.get("message", "")
-            character = data.get("character", "Default Character")
+        data = json.loads(request.body)
+        character_name = data.get("character", "Default")  # 요청에서 캐릭터 이름 가져오기
+        user_query = data.get("message", "")  # 요청에서 사용자 메시지 가져오기
 
-            # OpenAI GPT 처리 (단순 메시지 에코로 대체)
-            response_text = f"{message}"
+        if not user_query:
+            return JsonResponse({"error": "Message is required"}, status=400)
+
+        try:
+            # LLM의 generate_chat_response 호출 (캐릭터 이름과 메시지 전달)
+            response = generate_chat_response(character_name, user_query)
+
+            # TTS 생성 파일 경로
+            timestamp = int(time.time())
+            audio_filename = f"response_{timestamp}.mp3"
+            audio_dir = os.path.join(settings.BASE_DIR, 'static', 'audios')
+            os.makedirs(audio_dir, exist_ok=True)  # 디렉토리 없을 시 생성
+            audio_path = os.path.join(audio_dir, audio_filename)
 
             # OpenAI TTS 생성
-            audio_filename = f"response_{int(time.time())}.mp3"
-            audio_path = os.path.join(settings.BASE_DIR, 'static/audios', audio_filename)
-
-            response = client.openai.audio.speech.create(
-                model="tts-1-hd",
-                voice="alloy",  # 선택 가능한 목소리: alloy, ash, coral 등
-                input=response_text
-            )
-            response.stream_to_file(audio_path)
+            try:
+                tts_response = client.audio.speech.create(
+                    model="tts-1-hd",
+                    voice="nave",  # 목소리 선택 alloy, ash, coral, echo, fable, onyx, nova, sage, shimmer
+                    input=response  # `generate_chat_response`로 반환된 응답을 TTS로 변환
+                )
+                with open(audio_path, 'wb') as f:
+                    f.write(tts_response.read())
+            except client.error.OpenAIError as e:
+                return JsonResponse({"error": f"TTS generation failed: {str(e)}"}, status=500)
 
             # 오디오 URL 생성
-            audio_url = f"{settings.BASE_DIR}static/audios/{audio_filename}"
+            audio_url = f"{request.scheme}://{request.get_host()}/static/audios/{audio_filename}"
 
-            return JsonResponse({"response": response_text, "audio_url": audio_url})
+            # 생성된 텍스트 응답과 오디오 URL 반환
+            return JsonResponse({"response": response, "audio_url": audio_url})
+
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Invalid request method"}, status=400)
-
-
 
 logger = logging.getLogger(__name__)
 
