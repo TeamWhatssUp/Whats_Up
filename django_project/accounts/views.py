@@ -8,9 +8,11 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from django.shortcuts import redirect
 from django.core.files.storage import default_storage
 from django.conf import settings
+from django.contrib.auth import logout
 from django.views import View
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.utils.deprecation import MiddlewareMixin
 import json
 from .llm import generate_chat_response
 from langchain_openai import OpenAIEmbeddings
@@ -26,6 +28,7 @@ from datetime import datetime
 import logging
 import time
 from pathlib import Path
+import shutil
 
 
 
@@ -68,16 +71,7 @@ def chatbot_page(request):
     # /chatbot/ 경로에서 chatbot.html 템플릿 렌더링
     return render(request, 'chatbot.html')
 
-@csrf_exempt
-def chatbot_api(request):
-    if request.method == "POST":
-        data = json.loads(request.body)
-        user_message = data.get("message", "")
 
-        # 간단한 봇 응답 로직
-        bot_response = f"You said: {user_message}"
-        return JsonResponse({"response": bot_response})
-    return JsonResponse({"error": "Invalid request method"}, status=400)
 
 def friends_selection(request):
     # 등장인물 선택 화면 렌더링
@@ -165,15 +159,13 @@ def save_audio(request):
 
         save_path = os.path.join(settings.BASE_DIR, 'static/audios', unique_filename)
 
-        # Debug: Log the generated file path and name
-        logger.debug(f"Generated file path: {save_path}")
-
         # Ensure the directory exists
         try:
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
         except Exception as e:
             logger.error(f"Error creating directories: {e}")
             return JsonResponse({'success': False, 'message': 'Error creating directories.'})
+
         # Save the file
         try:
             with open(save_path, 'wb') as f:
@@ -187,11 +179,14 @@ def save_audio(request):
         transcription = transcribe_audio_with_whisper(save_path)
 
         if transcription:
+            audio_url = f"/static/audios/{unique_filename}"  # 생성된 오디오 파일 URL
+
             return JsonResponse({
                 'success': True,
                 'message': 'Audio saved and transcribed successfully.',
                 'filename': unique_filename,
-                'transcription': transcription
+                'transcription': transcription,
+                'audio_url': audio_url  # 오디오 URL 반환
             })
         else:
             return JsonResponse({
@@ -200,6 +195,7 @@ def save_audio(request):
             })
 
     return JsonResponse({'success': False, 'message': 'Invalid request.'})
+
 
 def transcribe_audio_with_whisper(audio_path):
     try:
@@ -222,3 +218,8 @@ def transcribe_audio_with_whisper(audio_path):
     except Exception as e:
         logger.error(f"Error during transcription: {e}")
         return None
+    
+
+
+
+
