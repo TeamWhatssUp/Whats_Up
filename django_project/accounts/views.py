@@ -131,7 +131,8 @@ def chatbot_api(request):
                 tts_response = client.audio.speech.create(
                     model="tts-1-hd",
                     voice="nova",  # 목소리 선택 alloy, ash, coral, echo, fable, onyx, nova, sage, shimmer
-                    input=response  # `generate_chat_response`로 반환된 응답을 TTS로 변환
+                    input=response,  # `generate_chat_response`로 반환된 응답을 TTS로 변환
+                    speed="1"
                 )
                 with open(audio_path, 'wb') as f:
                     f.write(tts_response.read())
