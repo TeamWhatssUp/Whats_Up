@@ -170,6 +170,7 @@ def generate_chat_response(character_name, user_query, summary_threshold=500):
     Your catchphrases: {" | ".join(selected_character.catchphrases)}.
     Your hobbies: {", ".join(selected_character.hobbies)}.
     You are having a conversation with a friend. Be {", ".join(selected_character.conversation_patterns)}.
+    Answer concisely in 3 sentences or less.
     """
 
     # 대본 데이터 로드
@@ -184,9 +185,16 @@ def generate_chat_response(character_name, user_query, summary_threshold=500):
     context = character_prompt + "\n" + "\n".join(doc.page_content for doc in search_results)
 
     # ChatOpenAI 모델 생성 및 호출
-    model = ChatOpenAI(model="gpt-4", openai_api_key=api_key, max_tokens=100,temperature=0,)
+    model = ChatOpenAI(model="gpt-4o", openai_api_key=api_key, max_tokens=100,temperature=0.5,)
     messages = [{"role": "system", "content": context}, {"role": "user", "content": user_query}]
     response = model.invoke(messages)
 
-    return response.content
+    # 응답 후 문장 수 체크
+    chatbot_response = response.content
+    sentences = chatbot_response.split('.')
 
+    # 3문장을 넘는 경우 3문장까지만 자르기
+    if len(sentences) > 3:
+        chatbot_response = '. '.join(sentences[:3]) + '.'
+
+    return chatbot_response

@@ -22,15 +22,36 @@
             const userInput = message || document.getElementById("user-input").value;
             const chatBox = document.getElementById("chat-box");
 
+            // 캐릭터별 목소리 설정
+            const characterVoiceMapping = {
+                "Default": "nova", 
+                "Monica": "nova", 
+                "Chandler": "ash",
+                "Rachel":"coral",
+                "Ross":"onyx",
+                "Joey":"echo",
+                "Phoebe":"shimmer" 
+                
+            };
+
+            // 캐릭터에 맞는 목소리 가져오기
+            const characterVoice = characterVoiceMapping[character] || "nova"; // 기본은 "nova"
 
             // 로딩 애니메이션 추가
-            const loadingElement = document.createElement("p");
-            loadingElement.innerHTML = `<span class="loading-dots"><span></span><span></span><span></span></span>`;
-            chatBox.appendChild(loadingElement);
+            const loadingElement = document.createElement("div");
+            loadingElement.className = "loading-dots";
+            document.querySelector("h1").appendChild(loadingElement);
 
-            const loadingDots = document.querySelector(".loading-dots");
-            loadingDots.style.position = "absolute";
-            loadingDots.style.right = "20px";
+            // 사용자 메시지 추가 (채팅박스에 왼쪽 정렬로 추가)
+            const userMessage = document.createElement("div");
+            userMessage.style.textAlign = "left";  // 왼쪽 정렬 (사용자의 메시지)
+            const userMessageText = document.createElement("p");
+            userMessageText.innerHTML = `<strong>You:</strong> ${userInput}`;
+            userMessage.appendChild(userMessageText);
+            chatBox.appendChild(userMessage);
+
+            // 채팅창 스크롤 자동 이동
+            chatBox.scrollTop = chatBox.scrollHeight;
 
             try {
                 const response = await fetch("http://127.0.0.1:8000/chatbot/api/", {
@@ -38,64 +59,67 @@
                     headers: {
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({ message: userInput, character: character }),
+                    body: JSON.stringify({ message: userInput, character: character, voice: characterVoice }),
                 });
 
                 const data = await response.json();
 
-                if (response.ok) {
-                    // 로딩 애니메이션 제거
-                    loadingElement.remove();
+                // 로딩 애니메이션 제거
+                loadingElement.remove();
 
-                    // 중복된 캐릭터 이름 제거
+                if (response.ok) {
+                    // 응답 메시지 처리
                     let chatbotResponse = data.response;
-                    if (chatbotResponse.startsWith(`${character}:`)) {
-                        chatbotResponse = chatbotResponse.replace(`${character}:`, "").trim();
+
+                    if (character) {
+                        chatbotResponse = chatbotResponse.replace(new RegExp(`^${character}:|^${character}::`), "").trim();
                     }
 
-                    // 챗봇 응답 추가 (오른쪽 정렬)
+                    // 챗봇 응답 추가
                     const chatMessage = document.createElement("div");
-                    chatMessage.style.textAlign = "right";  // 왼쪽 정렬 (챗봇의 메시지)
-
+                    chatMessage.style.textAlign = "right"; // 오른쪽 정렬
                     const messageText = document.createElement("p");
-                    messageText.innerHTML = `${data.response}<strong>: ${character}</strong>`;
+                    messageText.innerHTML = `${chatbotResponse} <strong>: ${character}</strong>`;
                     chatMessage.appendChild(messageText);
                     chatBox.appendChild(chatMessage);
-                    
 
-                    // TTS 처리
+                    // TTS 처리 (오디오 URL이 있으면 오디오 추가)
                     if (data.audio_url) {
-                        // 오디오 컨테이너 추가
                         const audioContainer = document.createElement("div");
-                        audioContainer.style.display = "flex";  // flexbox로 오른쪽 정렬
-                        audioContainer.style.justifyContent = "flex-end";  // 오디오를 오른쪽 정렬
-                        audioContainer.style.marginTop = "10px";  // 텍스트와 오디오 사이 간격
+                        audioContainer.style.display = "flex"; // flexbox로 오른쪽 정렬
+                        audioContainer.style.justifyContent = "flex-end"; // 오디오를 오른쪽 정렬
+                        audioContainer.style.marginTop = "10px"; // 텍스트와 오디오 사이 간격
 
                         const audioElement = document.createElement("audio");
                         audioElement.controls = true;
                         const sourceElement = document.createElement("source");
                         sourceElement.src = data.audio_url;
-                        sourceElement.type = "audio/mpeg";
-
+                        sourceElement.type = "audio/wav";
                         audioElement.appendChild(sourceElement);
                         audioContainer.appendChild(audioElement);
                         chatBox.appendChild(audioContainer);
                     }
+
                 } else {
                     // 에러 처리
-                    loadingElement.remove();
                     chatBox.innerHTML += `<p><strong>Error:</strong> ${data.error}</p>`;
                 }
 
                 // 입력 필드 초기화 및 스크롤 이동
                 document.getElementById("user-input").value = "";
-                chatBox.scrollTop = chatBox.scrollHeight;
+                chatBox.scrollTop = chatBox.scrollHeight; // 스크롤을 맨 아래로 내리기
+
             } catch (error) {
-                // 로딩 애니메이션 제거 및 에러 메시지 표시
-                loadingElement.remove();
+                // 에러 처리
                 chatBox.innerHTML += `<p><strong>Error:</strong> Unable to connect to the server.</p>`;
+                loadingElement.remove();
             }
         }
+
+
+
+
+        
     </script>
 
     <style>
@@ -126,30 +150,22 @@
     </style>
 
     <style>
-        /* 화면 전체를 차지하는 배경 */
-        #chat-box {
-            display: block;
-            overflow-y: auto;
-            max-height: 300px;
-            position: relative;
-        }
 
-        /* 파란색 원 애니메이션 */
-        .loading-dots {
+    /* 로딩 애니메이션 스타일 */
+    .loading-dots {
             display: inline-block;
-            position: fixed;  /* 화면 전체에서 고정 */
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);  /* 화면 정 가운데 배치 */
-            width: 50px;
-            height: 50px;
+            margin-left: 10px;
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
-            border: 5px solid #00f;  /* 파란색 테두리 */
-            border-top: 5px solid transparent;
-            animation: rotate-circle 1.5s linear infinite;
+            border: 3px solid #00f;
+            border-top: 3px solid transparent;
+            animation: rotate-circle 1s linear infinite;
         }
 
-        /* 원이 회전하는 애니메이션 */
+
+
+        /* 원 회전 애니메이션 */
         @keyframes rotate-circle {
             0% {
                 transform: translate(-50%, -50%) rotate(0deg);
@@ -159,7 +175,10 @@
             }
         }
 
-
+        h1 {
+            display: inline-block;
+            position: relative; /* 로딩 애니메이션 위치 기준 */
+        }
     </style>
 
 </head>
@@ -175,7 +194,7 @@
             <button id="recordBtn" class="button record">Record</button>
             <button id="stopBtn" class="button stop" disabled>Stop</button>
         </div>
-        <!-- 여기에 오디오 재생을 위한 audio 태그 추가 (기본적으로 숨김 처리) -->
+    
         <audio id="audioPlayback" controls style="display: none;"></audio>
         
         <p id="statusMessage"></p>

@@ -105,6 +105,7 @@ def chatbot_api(request):
         data = json.loads(request.body)
         character_name = data.get("character", "Default")  # 요청에서 캐릭터 이름 가져오기
         user_query = data.get("message", "")  # 요청에서 사용자 메시지 가져오기
+        voice = data.get("voice", "nova")  # 요청에서 목소리 정보 가져오기 (기본값 "nova")
 
         if not user_query:
             return JsonResponse({"error": "Message is required"}, status=400)
@@ -124,7 +125,7 @@ def chatbot_api(request):
             try:
                 tts_response = client.audio.speech.create(
                     model="tts-1-hd",
-                    voice="nova",  # 목소리 선택 alloy, ash, coral, echo, fable, onyx, nova, sage, shimmer
+                    voice=voice,  # 전달받은 목소리 사용
                     input=response,  # `generate_chat_response`로 반환된 응답을 TTS로 변환
                     speed="1"
                 )
