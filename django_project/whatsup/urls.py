@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
-from accounts.views import chatbot_page, friends_selection, chatbot_api
+from accounts.views import chatbot_page, friends_selection, chatbot_api, save_audio
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -9,4 +9,6 @@ urlpatterns = [
     path('friends-selection/', friends_selection, name='friends_selection'),
     path('chatbot/api/', chatbot_api, name='chatbot_api'),  # chatbot/api 경로 직접 연결
     path('', include('main.urls')),
+    path('chatbot/save-audio/', save_audio, name='save_audio'),
+    
 ]

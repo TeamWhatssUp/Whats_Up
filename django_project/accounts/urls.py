@@ -9,7 +9,12 @@ from .views import (
     chatbot_page,
     friends_selection,
     chatbot_api,
+    
+
 )
+from .views import chatbot_api
+from . import views
+
 from .views import chatbot_api
 from rest_framework_simplejwt.views import TokenObtainPairView
 
@@ -24,5 +29,7 @@ urlpatterns = [
     path('', index, name='index'),
     path('friends-selection/', friends_selection, name='friends_selection'),  # 등장인물 선택 화면
     path('chatbot/api/', chatbot_api, name='chatbot_api'),
+    
+
 
 ]

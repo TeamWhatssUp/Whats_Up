@@ -19,13 +19,13 @@
         };
 
         // 메시지 전송 처리
-        async function sendMessage() {
-            const userInput = document.getElementById("user-input").value;
+        async function sendMessage(message) {
+            const userInput = message || document.getElementById("user-input").value;
             const chatBox = document.getElementById("chat-box");
 
             // 서버로 메시지 전송
             try {
-                const response = await fetch("http://127.0.0.1:8000/chatbot/api/", { // 절대 경로 사용
+                const response = await fetch("http://127.0.0.1:8000/chatbot/api/", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -35,52 +35,26 @@
 
                 const data = await response.json();
 
-                // 응답 표시
                 if (response.ok) {
-                    chatBox.innerHTML += `<p>${data.response}</p>`;
+                    chatBox.innerHTML += `<p><strong>Chatbot:</strong> ${data.response}</p>`;
+                    
+                    // TTS 처리
+                    if (data.audio_url) {
+                        chatBox.innerHTML += `
+                            <audio controls>
+                                <source src="${data.audio_url}" type="audio/mpeg">
+                                Your browser does not support the audio element.
+                            </audio>
+                        `;
+                    }
                 } else {
                     chatBox.innerHTML += `<p><strong>Error:</strong> ${data.error}</p>`;
                 }
 
-                // 입력 필드 초기화
                 document.getElementById("user-input").value = "";
-                chatBox.scrollTop = chatBox.scrollHeight; // 스크롤 아래로 이동
+                chatBox.scrollTop = chatBox.scrollHeight;
             } catch (error) {
                 chatBox.innerHTML += `<p><strong>Error:</strong> Unable to connect to the server.</p>`;
-            }
-        }
-
-        // 음성 입력 처리
-        function toggleSpeechRecognition() {
-            const micButton = document.getElementById("mic-button");
-
-            if (!recognition) {
-                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-                recognition.lang = 'en-US'; // 언어 설정
-
-                recognition.onresult = (event) => {
-                    const transcript = event.results[0][0].transcript;
-                    document.getElementById("user-input").value = transcript;
-                };
-
-                recognition.onerror = (event) => {
-                    alert("Speech recognition error: " + event.error);
-                };
-
-                recognition.onend = () => {
-                    isRecognizing = false;
-                    micButton.src = "/static/images/microphone-icon.jpg";
-                };
-            }
-
-            if (isRecognizing) {
-                recognition.stop();
-                isRecognizing = false;
-                micButton.src = "/static/images/microphone-icon.jpg"; // 마이크 아이콘
-            } else {
-                recognition.start();
-                isRecognizing = true;
-                micButton.src = "/static/images/off-mic-icon.jpg"; // 마이크 끔 아이콘
             }
         }
     </script>
@@ -90,10 +64,98 @@
     <div id="chat-box" style="border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto;"></div>
     <div style="display: flex; gap: 10px; margin-top: 10px;">
         <input id="user-input" type="text" placeholder="Type your message here" style="flex: 1;">
-        <button onclick="toggleSpeechRecognition()" style="background: none; border: none; cursor: pointer;">
-            <img id="mic-button" src="/static/images/microphone-icon.jpg" alt="Mic" style="width: 30px; height: 30px;">
-        </button>
         <button onclick="sendMessage()">Send</button>
     </div>
+    <div class="container">
+        
+        <div class="recorder">
+            <button id="recordBtn" class="button record">Record</button>
+            <button id="stopBtn" class="button stop" disabled>Stop</button>
+            <audio id="audioPlayback" controls></audio>
+        </div>
+        <p id="statusMessage"></p>
+        <div id="transcriptionResult">
+            <h3>Transcription:</h3>
+            <p id="transcriptionText"></p>
+        </div>
+    </div>
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+        let audioBlob;
+    
+        const recordBtn = document.getElementById('recordBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const audioPlayback = document.getElementById('audioPlayback');
+        const statusMessage = document.getElementById('statusMessage');
+        const transcriptionText = document.getElementById('transcriptionText');
+    
+        recordBtn.addEventListener('click', () => {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    mediaRecorder = new MediaRecorder(stream);
+    
+                    mediaRecorder.start();
+                    audioChunks = [];
+                    recordBtn.disabled = true;
+                    stopBtn.disabled = false;
+                    statusMessage.textContent = "Recording...";
+    
+                    mediaRecorder.addEventListener("dataavailable", event => {
+                        audioChunks.push(event.data);
+                    });
+    
+                    mediaRecorder.addEventListener("stop", () => {
+                        audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        audioPlayback.src = audioUrl;
+                        statusMessage.textContent = "Recording complete. Sending to server...";
+                        recordBtn.disabled = false;
+                        stopBtn.disabled = true;
+    
+                        // Send the audio to the server and process the transcription
+                        sendAudioToServer(audioBlob);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error accessing microphone:', error);
+                    statusMessage.textContent = "Error: Unable to access microphone.";
+                });
+        });
+    
+        stopBtn.addEventListener('click', () => {
+            if (mediaRecorder && mediaRecorder.state !== "inactive") {
+                mediaRecorder.stop();
+                statusMessage.textContent = "Recording stopped.";
+            }
+        });
+    
+        function sendAudioToServer(audioBlob) {
+            const formData = new FormData();
+            formData.append('audio_file', audioBlob, 'recording.wav');
+    
+            fetch('save-audio/', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusMessage.textContent = "Audio saved and transcribed successfully.";
+                    // Display the transcription
+                    transcriptionText.textContent = data.transcription;
+
+                    // 자동으로 텍스트를 채팅으로 전송
+                    sendMessage(data.transcription);
+                } else {
+                    statusMessage.textContent = data.message;
+                }
+            })
+            .catch(error => {
+                console.error('Error sending audio to server:', error);
+                statusMessage.textContent = "Error sending audio to server.";
+            });
+        }
+    </script>
 </body>
 </html>

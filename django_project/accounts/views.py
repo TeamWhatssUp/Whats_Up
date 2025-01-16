@@ -6,13 +6,26 @@ from rest_framework import status
 from .serializers import UserSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.shortcuts import redirect
+from django.core.files.storage import default_storage
+from django.conf import settings
 from django.views import View
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 from .llm import generate_chat_response
 from langchain_openai import OpenAIEmbeddings
-
+from openai import OpenAI
+from openai import OpenAIError
+from dotenv import load_dotenv
+import pyaudio
+import wave
+import os
+import base64
+import uuid
+from datetime import datetime
+import logging
+import time
+from pathlib import Path
 
 
 
@@ -85,6 +98,13 @@ characters = {
     "Phoebe": "Phoebe Buffay, quirky musician at your service.",
 }
 
+load_dotenv()
+
+client = OpenAI(
+    api_key = os.getenv("OPENAI_API_KEY")
+)
+
+
 @csrf_exempt
 def chatbot_api(request):
     if request.method == "POST":
@@ -92,11 +112,72 @@ def chatbot_api(request):
         character_name = data.get("character", "Default")  # 요청에서 캐릭터 이름 가져오기
         user_query = data.get("message", "")  # 요청에서 사용자 메시지 가져오기
 
+        if not user_query:
+            return JsonResponse({"error": "Message is required"}, status=400)
+
         try:
             # LLM의 generate_chat_response 호출 (캐릭터 이름과 메시지 전달)
             response = generate_chat_response(character_name, user_query)
-            return JsonResponse({"response": response})  # JSON 응답 반환
+
+            # TTS 생성 파일 경로
+            timestamp = int(time.time())
+            audio_filename = f"response_{timestamp}.mp3"
+            audio_dir = os.path.join(settings.BASE_DIR, 'static', 'audios')
+            os.makedirs(audio_dir, exist_ok=True)  # 디렉토리 없을 시 생성
+            audio_path = os.path.join(audio_dir, audio_filename)
+
+            # OpenAI TTS 생성
+            try:
+                tts_response = client.audio.speech.create(
+                    model="tts-1-hd",
+                    voice="nova",  # 목소리 선택 alloy, ash, coral, echo, fable, onyx, nova, sage, shimmer
+                    input=response  # `generate_chat_response`로 반환된 응답을 TTS로 변환
+                )
+                with open(audio_path, 'wb') as f:
+                    f.write(tts_response.read())
+            except client.error.OpenAIError as e:
+                return JsonResponse({"error": f"TTS generation failed: {str(e)}"}, status=500)
+
+            # 오디오 URL 생성
+            audio_url = f"{request.scheme}://{request.get_host()}/static/audios/{audio_filename}"
+
+            # 생성된 텍스트 응답과 오디오 URL 반환
+            return JsonResponse({"response": response, "audio_url": audio_url})
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Invalid request method"}, status=400)
+
+logger = logging.getLogger(__name__)
+
+@csrf_exempt
+def save_audio(request):
+    if request.method == 'POST' and request.FILES.get('audio_file'):
+        audio_file = request.FILES['audio_file']
+
+        # Generate a unique file name
+        unique_id = uuid.uuid4().hex
+        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+        file_extension = os.path.splitext(audio_file.name)[-1]
+        unique_filename = f"audio_{timestamp}_{unique_id}{file_extension}"
+
+        save_path = os.path.join(settings.BASE_DIR, 'static/audios', unique_filename)
+
+        # Debug: Log the generated file path and name
+        logger.debug(f"Generated file path: {save_path}")
+
+        # Ensure the directory exists
+        try:
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        except Exception as e:
+            logger.error(f"Error creating directories: {e}")
+            return JsonResponse({'success': False, 'message': 'Error creating directories.'})
+        # Save the file
+        try:
+            with open(save_path, 'wb') as f:
+                for chunk in audio_file.chunks():
+                    f.write(chunk)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)  # 예외 처리
     return JsonResponse({"error": "Invalid request method"}, status=400)  # POST가 아닌 경우 처리
-
