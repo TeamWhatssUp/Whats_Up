@@ -99,3 +99,4 @@ def chatbot_api(request):
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)  # 예외 처리
     return JsonResponse({"error": "Invalid request method"}, status=400)  # POST가 아닌 경우 처리
+
