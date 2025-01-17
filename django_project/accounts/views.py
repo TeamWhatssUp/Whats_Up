@@ -11,6 +11,7 @@ from django.conf import settings
 from django.views import View
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.utils.deprecation import MiddlewareMixin
 import json
 from .llm import generate_chat_response
 from langchain_openai import OpenAIEmbeddings
@@ -109,16 +110,7 @@ def chatbot_page(request):
     # /chatbot/ 경로에서 chatbot.html 템플릿 렌더링
     return render(request, 'chatbot.html')
 
-@csrf_exempt
-def chatbot_api(request):
-    if request.method == "POST":
-        data = json.loads(request.body)
-        user_message = data.get("message", "")
 
-        # 간단한 봇 응답 로직
-        bot_response = f"You said: {user_message}"
-        return JsonResponse({"response": bot_response})
-    return JsonResponse({"error": "Invalid request method"}, status=400)
 
 def friends_selection(request):
     # 등장인물 선택 화면 렌더링
@@ -152,6 +144,7 @@ def chatbot_api(request):
         data = json.loads(request.body)
         character_name = data.get("character", "Default")  # 요청에서 캐릭터 이름 가져오기
         user_query = data.get("message", "")  # 요청에서 사용자 메시지 가져오기
+        voice = data.get("voice", "nova")  # 요청에서 목소리 정보 가져오기 (기본값 "nova")
 
         if not user_query:
             return JsonResponse({"error": "Message is required"}, status=400)
@@ -220,5 +213,45 @@ def save_audio(request):
                 for chunk in audio_file.chunks():
                     f.write(chunk)
         except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)  # 예외 처리
-    return JsonResponse({"error": "Invalid request method"}, status=400)  # POST가 아닌 경우 처리
+            logger.error(f"Error saving the audio file: {e}")
+            return JsonResponse({'success': False, 'message': 'Error saving audio file.'})
+
+        # Call Whisper API to transcribe the audio
+        transcription = transcribe_audio_with_whisper(save_path)
+
+        if transcription:
+            return JsonResponse({
+                'success': True,
+                'message': 'Audio saved and transcribed successfully.',
+                'filename': unique_filename,
+                'transcription': transcription
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'message': 'Audio saved, but transcription failed.'
+            })
+
+    return JsonResponse({'success': False, 'message': 'Invalid request.'})
+
+def transcribe_audio_with_whisper(audio_path):
+    try:
+        # Open the audio file
+        with open(audio_path, 'rb') as audio_file:
+            # Send the audio file to OpenAI Whisper API
+            response = client.audio.transcriptions.create(
+                model="whisper-1",  # Whisper 모델 사용
+                file=audio_file,
+                language="en", # 언어 설정
+            )
+        
+        # Log the API response to check the returned data
+        logger.debug(f"Whisper API response: {response}")
+
+        # Extract the transcription from the response
+        transcription = response.text
+        return transcription
+
+    except Exception as e:
+        logger.error(f"Error during transcription: {e}")
+        return None

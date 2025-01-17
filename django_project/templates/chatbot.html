@@ -27,46 +27,169 @@
         };
         
 
-        // 메시지 전송 처리
         async function sendMessage(message) {
             const userInput = message || document.getElementById("user-input").value;
             const chatBox = document.getElementById("chat-box");
 
-            // 서버로 메시지 전송
+            // 캐릭터별 목소리 설정
+            const characterVoiceMapping = {
+                "Default": "nova", 
+                "Monica": "nova", 
+                "Chandler": "ash",
+                "Rachel":"coral",
+                "Ross":"onyx",
+                "Joey":"echo",
+                "Phoebe":"shimmer" 
+                
+            };
+
+            // 캐릭터에 맞는 목소리 가져오기
+            const characterVoice = characterVoiceMapping[character] || "nova"; // 기본은 "nova"
+
+            // 로딩 애니메이션 추가
+            const loadingElement = document.createElement("div");
+            loadingElement.className = "loading-dots";
+            document.querySelector("h1").appendChild(loadingElement);
+
+            // 사용자 메시지 추가 (채팅박스에 왼쪽 정렬로 추가)
+            const userMessage = document.createElement("div");
+            userMessage.style.textAlign = "left";  // 왼쪽 정렬 (사용자의 메시지)
+            const userMessageText = document.createElement("p");
+            userMessageText.innerHTML = `<strong>You:</strong> ${userInput}`;
+            userMessage.appendChild(userMessageText);
+            chatBox.appendChild(userMessage);
+
+            // 채팅창 스크롤 자동 이동
+            chatBox.scrollTop = chatBox.scrollHeight;
+
             try {
                 const response = await fetch("http://127.0.0.1:8000/chatbot/api/", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({ message: userInput, character: character }),
+                    body: JSON.stringify({ message: userInput, character: character, voice: characterVoice }),
                 });
 
                 const data = await response.json();
 
+                // 로딩 애니메이션 제거
+                loadingElement.remove();
+
                 if (response.ok) {
-                    chatBox.innerHTML += `<p><strong>Chatbot:</strong> ${data.response}</p>`;
-                    
-                    // TTS 처리
-                    if (data.audio_url) {
-                        chatBox.innerHTML += `
-                            <audio controls>
-                                <source src="${data.audio_url}" type="audio/mpeg">
-                                Your browser does not support the audio element.
-                            </audio>
-                        `;
+                    // 응답 메시지 처리
+                    let chatbotResponse = data.response;
+
+                    if (character) {
+                        chatbotResponse = chatbotResponse.replace(new RegExp(`^${character}:|^${character}::`), "").trim();
                     }
+
+                    // 챗봇 응답 추가
+                    const chatMessage = document.createElement("div");
+                    chatMessage.style.textAlign = "right"; // 오른쪽 정렬
+                    const messageText = document.createElement("p");
+                    messageText.innerHTML = `${chatbotResponse} <strong>: ${character}</strong>`;
+                    chatMessage.appendChild(messageText);
+                    chatBox.appendChild(chatMessage);
+
+                    // TTS 처리 (오디오 URL이 있으면 오디오 추가)
+                    if (data.audio_url) {
+                        const audioContainer = document.createElement("div");
+                        audioContainer.style.display = "flex"; // flexbox로 오른쪽 정렬
+                        audioContainer.style.justifyContent = "flex-end"; // 오디오를 오른쪽 정렬
+                        audioContainer.style.marginTop = "10px"; // 텍스트와 오디오 사이 간격
+
+                        const audioElement = document.createElement("audio");
+                        audioElement.controls = true;
+                        const sourceElement = document.createElement("source");
+                        sourceElement.src = data.audio_url;
+                        sourceElement.type = "audio/wav";
+                        audioElement.appendChild(sourceElement);
+                        audioContainer.appendChild(audioElement);
+                        chatBox.appendChild(audioContainer);
+                    }
+
                 } else {
+                    // 에러 처리
                     chatBox.innerHTML += `<p><strong>Error:</strong> ${data.error}</p>`;
                 }
 
+                // 입력 필드 초기화 및 스크롤 이동
                 document.getElementById("user-input").value = "";
-                chatBox.scrollTop = chatBox.scrollHeight;
+                chatBox.scrollTop = chatBox.scrollHeight; // 스크롤을 맨 아래로 내리기
+
             } catch (error) {
+                // 에러 처리
                 chatBox.innerHTML += `<p><strong>Error:</strong> Unable to connect to the server.</p>`;
+                loadingElement.remove();
             }
         }
+
+
+
+
+        
     </script>
+
+    <style>
+
+        
+        /* 오른쪽 정렬 스타일 */
+        .chatbot-message.right {
+            text-align: right;
+            position: absolute;
+            right: 10px;
+        }
+
+
+
+        /* 챗봇 이름을 오른쪽 끝에 위치시키는 스타일 */
+        .chatbot-name {
+            display: inline-block;
+            font-weight: bold;
+            margin-right: 10px; /* 챗봇 이름과 메시지 사이의 간격 */
+        }
+
+        /* 채팅창과 챗봇 이름 스타일을 오른쪽으로 배치 */
+        .chatbot-right-align {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+    </style>
+
+    <style>
+
+    /* 로딩 애니메이션 스타일 */
+    .loading-dots {
+            display: inline-block;
+            margin-left: 10px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 3px solid #00f;
+            border-top: 3px solid transparent;
+            animation: rotate-circle 1s linear infinite;
+        }
+
+
+
+        /* 원 회전 애니메이션 */
+        @keyframes rotate-circle {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+        h1 {
+            display: inline-block;
+            position: relative; /* 로딩 애니메이션 위치 기준 */
+        }
+    </style>
+
 </head>
 <body>
     <h1>Chatbot with <span id="character-name"></span></h1>
@@ -76,15 +199,15 @@
         <button id="SendButton" onclick="sendMessage()">Send</button>
     </div>
     <div class="container">
-        
         <div class="recorder">
             <button id="recordBtn" class="button record">Record</button>
             <button id="stopBtn" class="button stop" disabled>Stop</button>
-            <audio id="audioPlayback" controls></audio>
         </div>
+    
+        <audio id="audioPlayback" controls style="display: none;"></audio>
+        
         <p id="statusMessage"></p>
         <div id="transcriptionResult">
-            <h3>Transcription:</h3>
             <p id="transcriptionText"></p>
         </div>
     </div>
@@ -139,10 +262,12 @@
             }
         });
     
+        
+        // 사용자가 녹음한 오디오가 완료된 후 오디오 태그를 사용자 메시지 바로 아래에 배치
         function sendAudioToServer(audioBlob) {
             const formData = new FormData();
             formData.append('audio_file', audioBlob, 'recording.wav');
-    
+
             fetch('save-audio/', {
                 method: 'POST',
                 body: formData,
@@ -151,8 +276,36 @@
             .then(data => {
                 if (data.success) {
                     statusMessage.textContent = "Audio saved and transcribed successfully.";
-                    // Display the transcription
-                    transcriptionText.textContent = data.transcription;
+                    
+                    const chatBox = document.getElementById("chat-box");
+
+                    // 1. 사용자 입력 메시지 표시
+                    const userMessage = document.createElement("div");
+                    userMessage.style.textAlign = "left";  // 왼쪽 정렬 (사용자의 메시지)
+                    const messageText = document.createElement("p");
+                    messageText.innerHTML = `<strong>You :</strong> ${data.transcription}`;
+                    userMessage.appendChild(messageText);
+                    chatBox.appendChild(userMessage);
+
+                    // 2. 사용자 오디오 재생 버튼을 텍스트 아래에 추가
+                    const audioContainer = document.createElement("div");
+                    audioContainer.style.display = "block";  // 순차적으로 배치
+                    audioContainer.style.marginTop = "10px";  // 텍스트와 오디오 사이 간격
+
+                    // 서버에서 반환된 오디오 URL로 오디오 태그 생성
+                    const audioElement = document.createElement("audio");
+                    audioElement.controls = true;
+                    const sourceElement = document.createElement("source");
+                    sourceElement.src = data.audio_url;  // 서버에서 받은 오디오 URL
+                    sourceElement.type = "audio/wav";
+                    audioElement.appendChild(sourceElement);
+                    audioContainer.appendChild(audioElement);
+
+                    // 오디오 재생 버튼을 사용자 메시지 아래에 추가
+                    chatBox.appendChild(audioContainer);
+                    
+                    // 입력 필드 초기화
+                    document.getElementById("user-input").value = "";
 
                     // 자동으로 텍스트를 채팅으로 전송
                     sendMessage(data.transcription);
@@ -165,6 +318,7 @@
                 statusMessage.textContent = "Error sending audio to server.";
             });
         }
+
     </script>
 </body>
 </html>
