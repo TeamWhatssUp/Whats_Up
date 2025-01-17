@@ -14,7 +14,7 @@
         <label for="password">비밀번호:</label>
         <input type="password" id="password" name="password"><br><br>
 
-        <button type="button" onclick="login()">로그인</button>
+        <button type="button" id="loginButton" onclick="login()">로그인</button>
         <button type="button" onclick="window.location.href='/account/register-page/'">회원가입</button>
         <!-- 회원가입 버튼 추가 -->
     </form>
@@ -46,6 +46,14 @@
                 alert('로그인 요청 중 오류가 발생했습니다.');
             }
         }
+
+         // 비밀번호 입력 필드에서 엔터 키 감지
+        document.getElementById('password').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // 기본 폼 제출 방지
+                document.getElementById('loginButton').click(); // 로그인 버튼 클릭
+            }
+        });
     </script>
 </body>
 </html>

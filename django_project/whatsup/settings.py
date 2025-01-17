@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "accounts",
     "main",
+    "rest_framework_simplejwt",
 ]
 
 MIDDLEWARE = [
@@ -149,8 +150,8 @@ REST_FRAMEWORK = {
 from datetime import timedelta
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),  # Access Token 유효 기간
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),   # Refresh Token 유효 기간
-    'ROTATE_REFRESH_TOKENS': False,               # Refresh Token 재발급 여부
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),  # Access Token 유효 기간
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),   # Refresh Token 유효 기간
+    'ROTATE_REFRESH_TOKENS': True,               # Refresh Token 재발급 여부
     'BLACKLIST_AFTER_ROTATION': True,             # Refresh Token 만료 처리 여부
 }

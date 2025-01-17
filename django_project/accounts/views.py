@@ -26,8 +26,12 @@ from datetime import datetime
 import logging
 import time
 from pathlib import Path
-
-
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.contrib.auth.hashers import check_password
+from rest_framework.response import Response
+from rest_framework import status
+from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
 # Create your views here.
 
@@ -44,8 +48,45 @@ class RegisterView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class LoginView(TokenObtainPairView):
-    pass
+
+User = get_user_model()
+
+class UserLoginAPI(APIView):
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+
+        # 현재 설정된 사용자 모델을 동적으로 가져옴
+        user = User.objects.filter(username=username).first()
+
+        if user is None:
+            return Response(
+                {"message": "존재하지 않는 아이디입니다."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not check_password(password, user.password):
+            return Response(
+                {"message": "비밀번호가 틀렸습니다."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        token = TokenObtainPairSerializer.get_token(user)
+        refresh_token = str(token)
+        access_token = str(token.access_token)
+
+        response = Response(
+            {
+                "user": UserSerializer(user).data,
+                "message": "login success",
+                "jwt_token": {
+                    "access_token": access_token,
+                    "refresh_token": refresh_token
+                },
+            },
+            status=status.HTTP_200_OK
+        )
+        response.set_cookie("access_token", access_token, httponly=True)
+        response.set_cookie("refresh_token", refresh_token, httponly=True)
+        return response
 
 class InitialSetupPage(View):
     def get(self, request):
