@@ -192,7 +192,7 @@ def main():
     vectorstore = prepare_vectorstore(documents, embeddings)  # 벡터스토어 준비
 
     # ChatOpenAI 모델 준비
-    model = ChatOpenAI(model="gpt-4", openai_api_key=api_key)
+    model = ChatOpenAI(model="gpt-4o", openai_api_key=api_key)
 
     # 대화 맥락 초기화
     context = character_prompt  # 캐릭터의 성격을 담은 시작 메시지
