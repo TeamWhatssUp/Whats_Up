@@ -164,8 +164,9 @@ def chatbot_api(request):
             try:
                 tts_response = client.audio.speech.create(
                     model="tts-1-hd",
-                    voice="nova",  # 목소리 선택 alloy, ash, coral, echo, fable, onyx, nova, sage, shimmer
-                    input=response  # `generate_chat_response`로 반환된 응답을 TTS로 변환
+                    voice=voice,  # 전달받은 목소리 사용
+                    input=response,  # `generate_chat_response`로 반환된 응답을 TTS로 변환
+                    speed="1"
                 )
                 with open(audio_path, 'wb') as f:
                     f.write(tts_response.read())
@@ -198,15 +199,13 @@ def save_audio(request):
 
         save_path = os.path.join(settings.BASE_DIR, 'static/audios', unique_filename)
 
-        # Debug: Log the generated file path and name
-        logger.debug(f"Generated file path: {save_path}")
-
         # Ensure the directory exists
         try:
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
         except Exception as e:
             logger.error(f"Error creating directories: {e}")
             return JsonResponse({'success': False, 'message': 'Error creating directories.'})
+
         # Save the file
         try:
             with open(save_path, 'wb') as f:
@@ -220,11 +219,14 @@ def save_audio(request):
         transcription = transcribe_audio_with_whisper(save_path)
 
         if transcription:
+            audio_url = f"/static/audios/{unique_filename}"  # 생성된 오디오 파일 URL
+
             return JsonResponse({
                 'success': True,
                 'message': 'Audio saved and transcribed successfully.',
                 'filename': unique_filename,
-                'transcription': transcription
+                'transcription': transcription,
+                'audio_url': audio_url  # 오디오 URL 반환
             })
         else:
             return JsonResponse({
@@ -233,6 +235,7 @@ def save_audio(request):
             })
 
     return JsonResponse({'success': False, 'message': 'Invalid request.'})
+
 
 def transcribe_audio_with_whisper(audio_path):
     try:
