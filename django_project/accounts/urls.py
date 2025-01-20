@@ -9,25 +9,29 @@ from .views import (
     chatbot_page,
     friends_selection,
     chatbot_api,
-    UserLoginAPI
-
+    UserLoginAPI,
+    profile_view  # 추가
 )
-from .views import chatbot_api
-from . import views
-
-from .views import chatbot_api
-from rest_framework_simplejwt.views import TokenObtainPairView
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
-    path("chatbot/", chatbot_page, name="chatbot_page"), # 챗봇 화면
+    path("chatbot/", chatbot_page, name="chatbot_page"),
     path('redirect/', login_redirect, name='login_redirect'),
     path('register-page/', register_page, name='register_page'),
     path('api/', chatbot_api, name='chatbot_api'),
     path('', index, name='index'),
-    path('friends-selection/', friends_selection, name='friends_selection'),  # 등장인물 선택 화면
+    path('friends-selection/', friends_selection, name='friends_selection'),
     path('chatbot/api/', chatbot_api, name='chatbot_api'),
-    path('login/', UserLoginAPI.as_view(), name='user_login'),  # 로그인 엔드포인트
+    path('login/', UserLoginAPI.as_view(), name='user_login'),
+    path('profile/', profile_view, name='profile'),  # 프로필 페이지 추가
+    path('delete-account/', profile_view, name='delete_account'),  # 회원 탈퇴 URL 추가
 
+    # Django 기본 제공 기능 추가
+    path('password-change/', auth_views.PasswordChangeView.as_view(template_name='profile.html'), name='password_change'),
+    path('password-change/done/', auth_views.PasswordChangeDoneView.as_view(template_name='profile.html'), name='password_change_done'),
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
 
+    # 로그인 페이지 추가
+    path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
 ]

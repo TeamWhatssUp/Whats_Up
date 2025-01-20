@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
 from accounts.views import chatbot_page, friends_selection, chatbot_api, save_audio
+from accounts.user_profile import profile_view
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -11,4 +12,6 @@ urlpatterns = [
     path('', include('main.urls')),
     path('chatbot/save-audio/', save_audio, name='save_audio'),
     
+    # 프로필 페이지 직접 추가
+    path('profile/', profile_view, name='profile'),
 ]
