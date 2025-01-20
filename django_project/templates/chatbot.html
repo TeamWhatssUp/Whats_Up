@@ -16,16 +16,7 @@
         // 페이지 로드 시 캐릭터 이름 표시
         window.onload = () => {
             document.getElementById("character-name").innerText = character || "Default Character";
-            
-            // 사용자 입력 필드에서 엔터 키 감지
-            document.getElementById("user-input").addEventListener("keydown", function(event) {
-                if (event.key === "Enter") { // 엔터 키 감지
-                    event.preventDefault(); // 기본 동작 방지
-                    document.getElementById("SendButton").click(); // Send 버튼 클릭
-                }
-            });
         };
-        
 
         async function sendMessage(message) {
             const userInput = message || document.getElementById("user-input").value;
@@ -51,13 +42,7 @@
             loadingElement.className = "loading-dots";
             document.querySelector("h1").appendChild(loadingElement);
 
-            // 사용자 메시지 추가 (채팅박스에 왼쪽 정렬로 추가)
-            const userMessage = document.createElement("div");
-            userMessage.style.textAlign = "left";  // 왼쪽 정렬 (사용자의 메시지)
-            const userMessageText = document.createElement("p");
-            userMessageText.innerHTML = `<strong>You:</strong> ${userInput}`;
-            userMessage.appendChild(userMessageText);
-            chatBox.appendChild(userMessage);
+            
 
             // 채팅창 스크롤 자동 이동
             chatBox.scrollTop = chatBox.scrollHeight;
@@ -103,7 +88,7 @@
                         audioElement.controls = true;
                         const sourceElement = document.createElement("source");
                         sourceElement.src = data.audio_url;
-                        sourceElement.type = "audio/wav";
+                        sourceElement.type = "audio/mp3";
                         audioElement.appendChild(sourceElement);
                         audioContainer.appendChild(audioElement);
                         chatBox.appendChild(audioContainer);
@@ -196,7 +181,7 @@
     <div id="chat-box" style="border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto;"></div>
     <div style="display: flex; gap: 10px; margin-top: 10px;">
         <input id="user-input" type="text" placeholder="Type your message here" style="flex: 1;">
-        <button id="SendButton" onclick="sendMessage()">Send</button>
+        <button onclick="sendMessage()">Send</button>
     </div>
     <div class="container">
         <div class="recorder">
@@ -238,7 +223,7 @@
                     });
     
                     mediaRecorder.addEventListener("stop", () => {
-                        audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
                         const audioUrl = URL.createObjectURL(audioBlob);
                         audioPlayback.src = audioUrl;
                         statusMessage.textContent = "Recording complete. Sending to server...";
@@ -266,7 +251,7 @@
         // 사용자가 녹음한 오디오가 완료된 후 오디오 태그를 사용자 메시지 바로 아래에 배치
         function sendAudioToServer(audioBlob) {
             const formData = new FormData();
-            formData.append('audio_file', audioBlob, 'recording.wav');
+            formData.append('audio_file', audioBlob, 'recording.mp3');
 
             fetch('save-audio/', {
                 method: 'POST',
@@ -297,7 +282,7 @@
                     audioElement.controls = true;
                     const sourceElement = document.createElement("source");
                     sourceElement.src = data.audio_url;  // 서버에서 받은 오디오 URL
-                    sourceElement.type = "audio/wav";
+                    sourceElement.type = "audio/mp3";
                     audioElement.appendChild(sourceElement);
                     audioContainer.appendChild(audioElement);
 
