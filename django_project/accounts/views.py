@@ -6,6 +6,7 @@ from rest_framework import status
 from .serializers import UserSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.shortcuts import redirect
+from .user_profile import profile_view as handle_profile_view
 from django.core.files.storage import default_storage
 from django.conf import settings
 from django.views import View
@@ -33,6 +34,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
+from .chat_rules import chat_rules_view, save_chat_rules # 대화 규칙 저장 기능 추가
 
 # Create your views here.
 
@@ -110,7 +112,8 @@ def chatbot_page(request):
     # /chatbot/ 경로에서 chatbot.html 템플릿 렌더링
     return render(request, 'chatbot.html')
 
-
+def profile_view(request):
+    return handle_profile_view(request)
 
 def friends_selection(request):
     # 등장인물 선택 화면 렌더링

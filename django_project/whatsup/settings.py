@@ -130,7 +130,8 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",  # static 폴더를 정적 파일로 설정
 ]
 
-
+# 정적 파일이 모일 디렉토리 (배포 환경에서 사용)
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -154,4 +155,48 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),   # Refresh Token 유효 기간
     'ROTATE_REFRESH_TOKENS': True,               # Refresh Token 재발급 여부
     'BLACKLIST_AFTER_ROTATION': True,             # Refresh Token 만료 처리 여부
+}
+
+# 로그인 및 로그아웃 후 이동할 경로 설정
+
+# 로그인하지 않은 사용자가 접근 시 리디렉션될 로그인 페이지
+LOGIN_URL = '/login/'  # 로그인 페이지 URL
+
+# 로그인 성공 후 리디렉션될 페이지 (프로필 페이지로 이동)
+LOGIN_REDIRECT_URL = '/profile/'  # 로그인 후 이동할 페이지
+
+# 로그아웃 후 리디렉션될 페이지 (로그인 페이지로 이동)
+LOGOUT_REDIRECT_URL = '/login/'  # 로그아웃 후 이동할 페이지
+
+# 세션 엔진 설정 (기본값: 데이터베이스 기반 세션)
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+
+# 세션 유지 시간 (예: 30분)
+SESSION_COOKIE_AGE = 1800  # 30분(초 단위)
+
+# 브라우저 닫힐 때 세션 유지 여부
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
+# HTTPOnly 속성 설정 (보안 강화)
+SESSION_COOKIE_HTTPONLY = True
+
+# 보안 옵션 (개발 시 False, 프로덕션에서는 True)
+SESSION_COOKIE_SECURE = False
+
+LOGGING = {
+    'version': 1,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'django_debug.log',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
 }
