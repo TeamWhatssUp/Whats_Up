@@ -47,14 +47,14 @@
 
         <div class="tab-content">
             <!-- 자기소개 섹션 -->
-            <div class="tab-pane fade show active" id="introduction">
+            <div class="tab-pane fade show active" id="introduction" role="tabpanel">
                 <h2 class="mt-4">1. 자기소개</h2>
                 <p>간단한 자기소개를 작성해 주세요. 챗봇이 당신을 더 잘 이해하는 데 도움이 됩니다.</p>
                 <form>
                     {% csrf_token %}
                     <div class="mb-3">
-                        <label for="introduction" class="form-label">자기소개 입력:</label>
-                        <textarea id="introduction" class="form-control" rows="4" placeholder="예: 저는 초급 수준의 영어 학습자입니다. 여행을 위해 배우고 있어요.">{{ introduction }}</textarea>
+                        <label for="introduction-textarea" class="form-label">자기소개 입력:</label>
+                        <textarea id="introduction-textarea" class="form-control" rows="4" placeholder="예: 저는 초급 수준의 영어 학습자입니다. 여행을 위해 배우고 있어요.">{{ introduction }}</textarea>
                         <p class="example">예시:</p>
                         <ul class="example">
                             <li>저는 영어 초보자입니다. 기본적인 일상 회화를 연습하고 싶어요.</li>
@@ -68,19 +68,19 @@
                             <li>자녀와 함께 영어로 대화할 수 있도록 공부하고 있어요.</li>
                             <li>유학을 계획 중이라 학교 생활과 관련된 표현을 배우고 싶어요.</li>
                         </ul>
-                <p class="example"><strong>Tip:</strong> 당신의 영어 수준, 학습 목표, 관심 있는 주제를 자유롭게 적어보세요!</p>
+                        <p class="example"><strong>Tip:</strong> 당신의 영어 수준, 학습 목표, 관심 있는 주제를 자유롭게 적어보세요!</p>
                     </div>
                 </form>
             </div>
 
             <!-- 대화 규칙 섹션 -->
-            <div class="tab-pane fade" id="rules">
+            <div class="tab-pane fade" id="rules" role="tabpanel">
                 <h2 class="mt-4">2. 대화 규칙</h2>
                 <p>대화 규칙을 적어 주세요. 이 규칙은 챗봇과의 원활한 소통을 위한 가이드로 사용됩니다.</p>
                 <form>
                     <div class="mb-3">
-                        <label for="chat-rules" class="form-label">대화 규칙 입력:</label>
-                        <textarea id="chat-rules" class="form-control" rows="4" placeholder="예: 제가 틀린 부분을 부드럽게 고쳐 주세요. 틀린 이유도 간단히 설명해 주세요.">{{ chat_rules }}</textarea>
+                        <label for="chat-rules-textarea" class="form-label">대화 규칙 입력:</label>
+                        <textarea id="chat-rules-textarea" class="form-control" rows="4" placeholder="예: 제가 틀린 부분을 부드럽게 고쳐 주세요. 틀린 이유도 간단히 설명해 주세요.">{{ chat_rules }}</textarea>
                         <p class="example">예시:</p>
                         <ul class="example">
                             <li>제가 틀린 부분을 부드럽게 고쳐 주세요. 틀린 이유도 간단히 설명해 주세요.</li>
@@ -94,7 +94,7 @@
                             <li>실수한 부분을 다시 연습할 수 있도록 유사한 질문을 해 주세요.</li>
                             <li>새로운 단어를 배울 때 유사한 단어나 반대 의미의 단어도 함께 알려 주세요.</li>
                         </ul>
-                <p class="example"><strong>Tip:</strong> 자신의 학습 스타일에 맞춰 원하는 피드백 방식이나 학습 방법을 자유롭게 적어보세요!</p>
+                        <p class="example"><strong>Tip:</strong> 자신의 학습 스타일에 맞춰 원하는 피드백 방식이나 학습 방법을 자유롭게 적어보세요!</p>
                     </div>
                 </form>
             </div>
@@ -106,12 +106,30 @@
     </div>
 
     <script>
-        function saveUserData() {
-            const introduction = document.getElementById("introduction").value.trim();
-            const chatRules = document.getElementById("chat-rules").value.trim();
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("introduction-tab").addEventListener("click", () => {
+                document.getElementById("introduction-textarea").focus();
+            });
+    
+            document.getElementById("rules-tab").addEventListener("click", () => {
+                document.getElementById("chat-rules-textarea").focus();
+            });
+        });
 
-            if (introduction === "" || chatRules === "") {
-                alert("모든 필드를 작성해 주세요.");
+        function saveUserData() {
+            const introductionElement = document.getElementById("introduction-textarea");
+            const chatRulesElement = document.getElementById("chat-rules-textarea");
+
+            if (!introductionElement || !chatRulesElement) {
+                alert("필드를 찾을 수 없습니다. 페이지를 새로고침 해주세요.");
+                return;
+            }
+
+            const introduction = introductionElement.value.trim();
+            const chatRules = chatRulesElement.value.trim();
+
+            if (!introduction && !chatRules) {
+                alert("하나 이상의 필드를 작성해 주세요.");
                 return;
             }
 
@@ -124,7 +142,7 @@
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-CSRFToken": getCookie('csrftoken')  
+                    "X-CSRFToken": getCookie('csrftoken')
                 },
                 body: JSON.stringify(userData)
             })

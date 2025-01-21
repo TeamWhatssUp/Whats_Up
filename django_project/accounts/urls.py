@@ -10,11 +10,10 @@ from .views import (
     friends_selection,
     chatbot_api,
     UserLoginAPI,
-    profile_view,  # 프로필 페이지 추가
-    chat_rules_view,  # Chat Rules 페이지 추가
-    save_chat_rules
+    profile_view  # 프로필 페이지 추가
 )
 from django.contrib.auth import views as auth_views
+from accounts.chat_rules import chat_rules_view, save_chat_rules
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),

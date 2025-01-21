@@ -4,8 +4,14 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 
 def chat_rules_view(request):
-    """챗봇 대화 규칙 페이지 렌더링"""
-    return render(request, 'chat_rules.html')
+    """챗봇 대화 규칙 페이지 렌더링 및 기존 입력값 제공"""
+    introduction = request.session.get('introduction', '')  # 세션에서 가져오기
+    chat_rules = request.session.get('chat_rules', '')
+
+    return render(request, 'chat_rules.html', {
+        'introduction': introduction,
+        'chat_rules': chat_rules
+    })
 
 @csrf_exempt
 def save_chat_rules(request):
@@ -16,14 +22,17 @@ def save_chat_rules(request):
             introduction = data.get('introduction', '')
             chat_rules = data.get('chat_rules', '')
 
-            if not introduction or not chat_rules:
-                return JsonResponse({'success': False, 'message': '모든 필드를 입력해주세요.'})
+            # 하나 이상의 필드가 입력되었는지 확인
+            if not introduction and not chat_rules:
+                return JsonResponse({'success': False, 'message': '하나 이상의 필드를 입력해주세요.'})
 
             # 세션에 데이터 저장 (테스트용, 추후 DB 연동 가능)
             request.session['introduction'] = introduction
             request.session['chat_rules'] = chat_rules
+            request.session.modified = True  # 세션 갱신 명시적으로 요청
 
-            return JsonResponse({'success': True})
+            return JsonResponse({'success': True, 'message': '저장이 완료되었습니다!'})
+        
         except json.JSONDecodeError:
             return JsonResponse({'success': False, 'message': '잘못된 요청입니다.'})
     
