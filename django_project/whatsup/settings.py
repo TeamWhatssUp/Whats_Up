@@ -130,7 +130,8 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",  # static 폴더를 정적 파일로 설정
 ]
 
-
+# 정적 파일이 모일 디렉토리 (배포 환경에서 사용)
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -181,3 +182,21 @@ SESSION_COOKIE_HTTPONLY = True
 
 # 보안 옵션 (개발 시 False, 프로덕션에서는 True)
 SESSION_COOKIE_SECURE = False
+
+LOGGING = {
+    'version': 1,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'django_debug.log',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}

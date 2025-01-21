@@ -34,6 +34,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
+from .chat_rules import chat_rules_view, save_chat_rules # 대화 규칙 저장 기능 추가
 
 # Create your views here.
 

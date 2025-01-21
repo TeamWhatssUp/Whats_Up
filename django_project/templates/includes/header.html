@@ -1,0 +1,25 @@
+{% load static %}
+<!-- 헤더 템플릿 -->
+<header class="header">
+    <div class="inner">
+        <div class="logo">
+            <img src="{% static 'images/logo.png' %}" alt="Logo" class="logo-img" />
+        </div>
+        <nav class="nav-links">
+            <a href="/profile" class="link {% if request.path == '/profile' %}active{% endif %}">Profile</a>
+            <a href="/chat-rules" class="link {% if request.path == '/chat-rules' %}active{% endif %}">Chat Rules</a>
+            <a href="/saved" class="link {% if request.path == '/saved' %}active{% endif %}">Saved</a>
+            <a href="/community" class="link {% if request.path == '/community' %}active{% endif %}">Community</a>
+        </nav>
+        <button class="burger-menu" onclick="toggleMenu()">☰</button>
+    </div>
+</header>
+
+<!-- 외부 CSS 파일 연결 -->
+<link rel="stylesheet" href="{% static 'css/header.css' %}">
+
+<script>
+    function toggleMenu() {
+        document.querySelector('.nav-links').classList.toggle('open');
+    }
+</script>
