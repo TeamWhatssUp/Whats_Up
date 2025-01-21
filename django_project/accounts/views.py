@@ -35,6 +35,8 @@ from rest_framework import status
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 from .chat_rules import chat_rules_view, save_chat_rules # 대화 규칙 저장 기능 추가
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import login 
 
 # Create your views here.
 
@@ -71,6 +73,9 @@ class UserLoginAPI(APIView):
             return Response(
                 {"message": "비밀번호가 틀렸습니다."}, status=status.HTTP_400_BAD_REQUEST
             )
+        
+        # Django 세션에 로그인 처리 추가
+        login(request, user)  # 로그인 성공 시 세션 생성
 
         token = TokenObtainPairSerializer.get_token(user)
         refresh_token = str(token)
@@ -112,8 +117,9 @@ def chatbot_page(request):
     # /chatbot/ 경로에서 chatbot.html 템플릿 렌더링
     return render(request, 'chatbot.html')
 
+@login_required  # 로그인한 사용자만 접근 가능
 def profile_view(request):
-    return handle_profile_view(request)
+    return render(request, 'profile.html')
 
 def friends_selection(request):
     # 등장인물 선택 화면 렌더링
