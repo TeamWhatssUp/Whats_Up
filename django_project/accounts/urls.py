@@ -9,7 +9,8 @@ from .views import (
     friends_selection,
     chatbot_api,
     UserLoginAPI,
-    profile_view  # 프로필 페이지 추가
+    profile_view,
+    CustomPasswordChangeView  # 프로필 페이지 추가
 )
 from django.contrib.auth import views as auth_views
 from accounts.chat_rules import chat_rules_view, save_chat_rules
@@ -37,4 +38,5 @@ urlpatterns = [
     # 로그인 페이지 추가
     path('login/', UserLoginAPI.as_view(), name='login'),
     
+    path('password-change/', CustomPasswordChangeView.as_view(), name='password_change'),
 ]

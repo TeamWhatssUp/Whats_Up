@@ -6,7 +6,6 @@ from rest_framework import status
 from .serializers import UserSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.shortcuts import redirect
-from .user_profile import profile_view as handle_profile_view
 from django.core.files.storage import default_storage
 from django.conf import settings
 from django.views import View
@@ -38,6 +37,10 @@ from .chat_rules import chat_rules_view, save_chat_rules # 대화 규칙 저장 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login 
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.views import PasswordChangeView
+from django.urls import reverse_lazy
+from django.contrib.messages.views import SuccessMessageMixin
+from django.contrib.auth import update_session_auth_hash
 # Create your views here.
 
 def index(request):
@@ -272,3 +275,11 @@ def transcribe_audio_with_whisper(audio_path):
     except Exception as e:
         logger.error(f"Error during transcription: {e}")
         return None
+    
+class CustomPasswordChangeView(SuccessMessageMixin, PasswordChangeView):
+    template_name = 'profile.html'  # 템플릿 파일 경로
+    success_url = reverse_lazy('profile')  # 성공 후 리다이렉트 URL
+    success_message = "비밀번호가 성공적으로 변경되었습니다!"  # 성공 메시지
+
+def password_change_done(request, user):
+    update_session_auth_hash(request, user)
