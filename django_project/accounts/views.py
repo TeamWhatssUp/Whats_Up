@@ -37,7 +37,7 @@ from django.contrib.auth import get_user_model
 from .chat_rules import chat_rules_view, save_chat_rules # 대화 규칙 저장 기능 추가
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login 
-
+from django.contrib.auth.hashers import make_password
 # Create your views here.
 
 def index(request):
@@ -48,10 +48,15 @@ class RegisterView(APIView):
     def post(self, request):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            validated_data = serializer.validated_data
+            # 비밀번호를 해싱
+            validated_data['password'] = make_password(validated_data['password'])
+            
+            # 사용자 객체 생성 및 저장
+            user = User.objects.create(**validated_data)
+
             return Response({'message': 'User created successfully!'}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 User = get_user_model()

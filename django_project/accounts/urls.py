@@ -38,4 +38,5 @@ urlpatterns = [
 
     # 로그인 페이지 추가
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
+    path('login-page/', login_page, name='login_page'),
 ]
