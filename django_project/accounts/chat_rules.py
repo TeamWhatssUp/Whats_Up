@@ -2,21 +2,25 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
+from .models import ChatRules
 
 def chat_rules_view(request):
-    """챗봇 대화 규칙 페이지 렌더링 및 기존 입력값 제공"""
-    introduction = request.session.get('introduction', '')  # 세션에서 가져오기
-    chat_rules = request.session.get('chat_rules', '')
-
-    return render(request, 'chat_rules.html', {
-        'introduction': introduction,
-        'chat_rules': chat_rules
-    })
+    """챗봇 대화 규칙 페이지 렌더링"""
+    if request.user.is_authenticated:
+        chat_rules, created = ChatRules.objects.get_or_create(user=request.user)
+        return render(request, 'chat_rules.html', {
+            'introduction': chat_rules.introduction or '',
+            'chat_rules': chat_rules.chat_rules or '',
+        })
+    return render(request, 'chat_rules.html')
 
 @csrf_exempt
 def save_chat_rules(request):
     """사용자가 입력한 대화 규칙 저장"""
     if request.method == 'POST':
+        if not request.user.is_authenticated:
+            return JsonResponse({'success': False, 'message': '로그인이 필요합니다.'})
+
         try:
             data = json.loads(request.body)
             introduction = data.get('introduction', '')
@@ -26,10 +30,10 @@ def save_chat_rules(request):
             if not introduction and not chat_rules:
                 return JsonResponse({'success': False, 'message': '하나 이상의 필드를 입력해주세요.'})
 
-            # 세션에 데이터 저장 (테스트용, 추후 DB 연동 가능)
-            request.session['introduction'] = introduction
-            request.session['chat_rules'] = chat_rules
-            request.session.modified = True  # 세션 갱신 명시적으로 요청
+            chat_rules_obj, created = ChatRules.objects.get_or_create(user=request.user)
+            chat_rules_obj.introduction = introduction
+            chat_rules_obj.chat_rules = chat_rules
+            chat_rules_obj.save()
 
             return JsonResponse({'success': True, 'message': '저장이 완료되었습니다!'})
         
