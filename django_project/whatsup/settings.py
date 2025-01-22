@@ -172,7 +172,10 @@ LOGOUT_REDIRECT_URL = '/login/'  # 로그아웃 후 이동할 페이지
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 # 세션 유지 시간 (예: 30분)
-SESSION_COOKIE_AGE = 1800  # 30분(초 단위)
+SESSION_COOKIE_AGE = 86400  # 1일(초 단위)
+
+# 매 요청마다 세션 저장
+SESSION_SAVE_EVERY_REQUEST = True
 
 # 브라우저 닫힐 때 세션 유지 여부
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
