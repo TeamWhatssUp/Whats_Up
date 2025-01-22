@@ -37,7 +37,7 @@
             const data = await response.json();
             if (response.ok) {
                 alert('회원가입 성공!');
-                window.location.href = '/account/login-page/';
+                window.location.href = '/login/';
             } else {
                 alert('회원가입 실패: ' + JSON.stringify(data));
             }
