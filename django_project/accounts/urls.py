@@ -10,7 +10,10 @@ from .views import (
     chatbot_api,
     UserLoginAPI,
     profile_view,
-    CustomPasswordChangeView  # 프로필 페이지 추가
+    logout_view, 
+    delete_account_view,
+    CustomPasswordChangeView,
+
 )
 from django.contrib.auth import views as auth_views
 from accounts.chat_rules import chat_rules_view, save_chat_rules
@@ -24,19 +27,13 @@ urlpatterns = [
     path('', index, name='index'),
     path('friends-selection/', friends_selection, name='friends_selection'),
     path('chatbot/api/', chatbot_api, name='chatbot_api'),
-    
     path('profile/', profile_view, name='profile'),  # 프로필 페이지 추가
-    path('delete-account/', profile_view, name='delete_account'),  # 회원 탈퇴 URL 추가
     path('chat-rules/', chat_rules_view, name='chat_rules'),  # Chat Rules 페이지 추가
     path('save-chat-rules/', save_chat_rules, name='save_chat_rules'),  # 데이터 저장 URL 추가
-
-    # Django 기본 제공 기능 추가
-    path('password-change/', auth_views.PasswordChangeView.as_view(template_name='profile.html'), name='password_change'),
-    path('password-change/done/', auth_views.PasswordChangeDoneView.as_view(template_name='profile.html'), name='password_change_done'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
-
-    # 로그인 페이지 추가
-    path('login/', UserLoginAPI.as_view(), name='login'),
-    
+    # CustomPasswordChangeView와 연결
     path('password-change/', CustomPasswordChangeView.as_view(), name='password_change'),
+    path('login/', UserLoginAPI.as_view(), name='login'),
+    path('logout/', logout_view, name='logout'),
+    path('delete-account/', delete_account_view, name='delete_account'),
+    
 ]
