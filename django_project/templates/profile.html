@@ -103,53 +103,17 @@
     });
 
     // 팝업 창 열기
-    function openPopup(message, isSuccess) {
-        const popup = window.open("", "popup", "width=400,height=200,resizable=no");
-        popup.document.write(`
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>알림</title>
-                <style>
-                    body {
-                        font-family: Arial, sans-serif;
-                        text-align: center;
-                        padding: 20px;
-                        background-color: ${isSuccess ? "#d4edda" : "#f8d7da"};
-                        color: ${isSuccess ? "#155724" : "#721c24"};
-                        border: 1px solid ${isSuccess ? "#c3e6cb" : "#f5c6cb"};
-                        border-radius: 5px;
-                    }
-                    h1 {
-                        font-size: 18px;
-                        margin-bottom: 10px;
-                    }
-                    button {
-                        padding: 10px 20px;
-                        background-color: ${isSuccess ? "#28a745" : "#dc3545"};
-                        color: white;
-                        border: none;
-                        border-radius: 5px;
-                        cursor: pointer;
-                    }
-                </style>
-            </head>
-            <body>
-                <h1>${message}</h1>
-                <button onclick="window.close()">닫기</button>
-            </body>
-            </html>
-        `);
-
-        if (isSuccess) {
-            // 2초 후 로그인 페이지로 리디렉션
-            setTimeout(() => {
-                window.location.href = "{% url 'login' %}";
-            }, 2000);
-        }
+function openPopup(message, isSuccess) {
+    if (isSuccess) {
+        alert(message); // 기본 팝업 창
+        // 2초 후 로그인 페이지로 리디렉션
+        setTimeout(() => {
+            window.location.href = "{% url 'login' %}";
+        }, 2000);
+    } else {
+        alert(message); // 실패 메시지도 동일한 기본 팝업 창 사용
     }
+}
 </script>
 
 <!-- 로그아웃 -->
