@@ -5,64 +5,93 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>프렌즈 영어회화 챗봇</title>
     <style>
+        /* 전체 배경 */
         body {
             font-family: 'Arial', sans-serif;
-            background-color: #f0f0f0;
-            color: #333;
             margin: 0;
             padding: 0;
+            height: 100vh;
+            background-image: url('https://blog.kakaocdn.net/dn/dQDSff/btqXMdnhrfq/KABfr4KIkLgqO8IiNZVk8k/img.jpg');
+            background-size: cover;
+            background-position: center;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            background-image: url('https://blog.kakaocdn.net/dn/dQDSff/btqXMdnhrfq/KABfr4KIkLgqO8IiNZVk8k/img.jpg'); /* 배경 이미지 */
-            background-size: cover;
-            background-position: center;
+            color: white;
         }
 
-        .container {
+        /* 메인 컨테이너 */
+        .main-container {
             text-align: center;
-            background-color: rgba(255, 255, 255, 0.8);
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            width: 80%;
-            max-width: 600px;
+            background-color: rgba(0, 0, 0, 0.7); /* 어두운 배경 */
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 12px 45px rgba(0, 0, 0, 0.5); /* 깊은 그림자 */
+            width: 90%;
+            max-width: 650px;
         }
 
+        /* 제목 */
         h1 {
-            font-size: 2.5em;
-            color: #2d3b50;
-            margin-bottom: 10px;
-        }
-
-        .tagline {
-            font-size: 1.2em;
-            color: #555;
+            font-size: 3.5em;
+            color: #f9a825;
             margin-bottom: 20px;
+            text-transform: uppercase;
+            font-weight: bold;
+            animation: fadeIn 2s ease-in-out; /* 페이드 인 애니메이션 */
         }
 
+        /* 태그라인 */
+        .tagline {
+            font-size: 1.5em;
+            color: #ddd;
+            margin-bottom: 30px;
+            font-style: italic;
+            animation: fadeIn 2s ease-in-out 1s; /* 1초 뒤에 애니메이션 시작 */
+        }
+
+        /* 버튼 스타일 */
         .button {
-            background-color: #f9a825;
-            color: #fff;
-            padding: 15px 30px;
+            background: linear-gradient(145deg, #f9a825, #ff8f00);
+            color: white;
+            padding: 15px 40px;
             border: none;
-            border-radius: 5px;
-            font-size: 1.1em;
+            border-radius: 30px;
+            font-size: 1.2em;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: transform 0.3s, box-shadow 0.3s; /* 버튼 애니메이션 */
+            margin-top: 20px;
         }
 
+        /* 버튼 호버 효과 */
         .button:hover {
-            background-color: #f57f17;
+            transform: scale(1.1); /* 크기 확장 */
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.4); /* 그림자 효과 */
+        }
+
+        /* 버튼 클릭 효과 */
+        .button:active {
+            transform: scale(0.95); /* 클릭 시 버튼 축소 */
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.6); /* 작은 그림자 */
+        }
+
+        /* 애니메이션 효과 (페이드 인) */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>프렌즈 영어회화 챗봇에 오신 것을 환영합니다!</h1>
-        <p class="tagline">당신이 좋아하는 "프렌즈"의 순간으로 함께 영어를 연습해봐요!</p>
-        <!-- 로그인 페이지로 연결되는 버튼 -->
+    <div class="main-container">
+        <h1>프렌즈 영어회화 챗봇</h1>
+        <p class="tagline">'프렌즈'와 함께 영어를 연습하고 재미있는 대화를 나눠보세요!</p>
+
+        <!-- 챗봇 시작 안내 -->
         <button class="button" onclick="window.location.href='/login'">챗봇 시작하기</button>
     </div>
 </body>
