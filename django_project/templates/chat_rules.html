@@ -1,0 +1,182 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What's up</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f9f9f9;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            background: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        .example {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        .tab-content {
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4 text-center">What's up</h1>
+
+        <!-- 탭 메뉴 -->
+        <ul class="nav nav-tabs" id="chatRulesTabs">
+            <li class="nav-item">
+                <a class="nav-link active" id="introduction-tab" data-bs-toggle="tab" href="#introduction">자기소개</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="rules-tab" data-bs-toggle="tab" href="#rules">대화 규칙</a>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- 자기소개 섹션 -->
+            <div class="tab-pane fade show active" id="introduction" role="tabpanel">
+                <h2 class="mt-4">1. 자기소개</h2>
+                <p>간단한 자기소개를 작성해 주세요. 챗봇이 당신을 더 잘 이해하는 데 도움이 됩니다.</p>
+                <form>
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="introduction-textarea" class="form-label">자기소개 입력:</label>
+                        <textarea id="introduction-textarea" class="form-control" rows="4" placeholder="예: 저는 초급 수준의 영어 학습자입니다. 여행을 위해 배우고 있어요.">{{ introduction }}</textarea>
+                        <p class="example">예시:</p>
+                        <ul class="example">
+                            <li>저는 영어 초보자입니다. 기본적인 일상 회화를 연습하고 싶어요.</li>
+                            <li>해외 출장을 자주 가는데, 업무 미팅에서 자신 있게 영어를 사용하고 싶습니다.</li>
+                            <li>여행을 위해 영어를 배우고 있으며, 공항, 호텔, 레스토랑에서 필요한 표현을 익히고 싶어요.</li>
+                            <li>저는 영어 중급자입니다. 보다 자연스러운 영어 표현을 배우고 싶어요.</li>
+                            <li>해외 취업을 목표로 하고 있으며, 면접 준비를 위해 영어를 연습하고 있습니다.</li>
+                            <li>영어 회화 능력을 향상시켜 글로벌 친구들과 자유롭게 대화하고 싶어요.</li>
+                            <li>취미로 영어를 배우고 있습니다. 주로 영화와 책을 통해 배우는 걸 좋아해요.</li>
+                            <li>영어 실력을 키워 직장에서의 프레젠테이션을 더 잘하고 싶습니다.</li>
+                            <li>자녀와 함께 영어로 대화할 수 있도록 공부하고 있어요.</li>
+                            <li>유학을 계획 중이라 학교 생활과 관련된 표현을 배우고 싶어요.</li>
+                        </ul>
+                        <p class="example"><strong>Tip:</strong> 당신의 영어 수준, 학습 목표, 관심 있는 주제를 자유롭게 적어보세요!</p>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 대화 규칙 섹션 -->
+            <div class="tab-pane fade" id="rules" role="tabpanel">
+                <h2 class="mt-4">2. 대화 규칙</h2>
+                <p>대화 규칙을 적어 주세요. 이 규칙은 챗봇과의 원활한 소통을 위한 가이드로 사용됩니다.</p>
+                <form>
+                    <div class="mb-3">
+                        <label for="chat-rules-textarea" class="form-label">대화 규칙 입력:</label>
+                        <textarea id="chat-rules-textarea" class="form-control" rows="4" placeholder="예: 제가 틀린 부분을 부드럽게 고쳐 주세요. 틀린 이유도 간단히 설명해 주세요.">{{ chat_rules }}</textarea>
+                        <p class="example">예시:</p>
+                        <ul class="example">
+                            <li>제가 틀린 부분을 부드럽게 고쳐 주세요. 틀린 이유도 간단히 설명해 주세요.</li>
+                            <li>너무 어려운 문장은 쉬운 표현도 함께 알려 주세요.</li>
+                            <li>제가 사용하는 문장이 자연스러운지 알려 주세요.</li>
+                            <li>한 번에 한 가지 주제에 대해 깊이 있게 대화하고 싶어요.</li>
+                            <li>모르는 단어나 문법이 나오면 예문을 들어 설명해 주세요.</li>
+                            <li>중요한 표현은 반복해서 알려 주세요.</li>
+                            <li>실생활에서 사용할 수 있는 문장을 더 많이 연습하고 싶어요.</li>
+                            <li>문장을 더 길고 복잡하게 만들어 나갈 수 있도록 도와주세요.</li>
+                            <li>실수한 부분을 다시 연습할 수 있도록 유사한 질문을 해 주세요.</li>
+                            <li>새로운 단어를 배울 때 유사한 단어나 반대 의미의 단어도 함께 알려 주세요.</li>
+                        </ul>
+                        <p class="example"><strong>Tip:</strong> 자신의 학습 스타일에 맞춰 원하는 피드백 방식이나 학습 방법을 자유롭게 적어보세요!</p>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <section class="text-end mt-4">
+            <button class="btn btn-primary" onclick="saveUserData()">저장</button>
+        </section>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("introduction-tab").addEventListener("click", () => {
+                document.getElementById("introduction-textarea").focus();
+            });
+    
+            document.getElementById("rules-tab").addEventListener("click", () => {
+                document.getElementById("chat-rules-textarea").focus();
+            });
+        });
+
+        function saveUserData() {
+            const introductionElement = document.getElementById("introduction-textarea");
+            const chatRulesElement = document.getElementById("chat-rules-textarea");
+
+            if (!introductionElement || !chatRulesElement) {
+                alert("필드를 찾을 수 없습니다. 페이지를 새로고침 해주세요.");
+                return;
+            }
+
+            const introduction = introductionElement.value.trim();
+            const chatRules = chatRulesElement.value.trim();
+
+            if (!introduction && !chatRules) {
+                alert("하나 이상의 필드를 작성해 주세요.");
+                return;
+            }
+
+            const userData = {
+                introduction: introduction,
+                chat_rules: chatRules
+            };
+
+            fetch("{% url 'save_chat_rules' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie('csrftoken')
+                },
+                body: JSON.stringify(userData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("설정이 저장되었습니다!");
+                    window.location.href = "{% url 'friends_selection' %}";
+                } else {
+                    alert("저장에 실패했습니다. 다시 시도해 주세요.");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("서버와의 통신에 문제가 발생했습니다.");
+            });
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.startsWith(name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

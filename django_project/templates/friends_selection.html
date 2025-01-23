@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Friends Selection</title>
+    <link rel="stylesheet" href="{% static 'css/header.css' %}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 600px;
+            margin: 40px auto;
+        }
+        .character {
+            text-align: center;
+        }
+        .character img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .character button {
+            margin-top: 10px;
+            padding: 10px 15px;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        .character button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <!-- 헤더 포함 -->
+    {% include 'includes/header.html' %}
+
+    <h1>Select Your Favorite Friend</h1>
+    <div class="grid">
+        <div class="character">
+            <img src="{% static 'images/rachel.jpg' %}" alt="Rachel">
+            <button onclick="location.href='/chatbot/?character=Rachel'">Select Rachel</button>
+        </div>
+        <div class="character">
+            <img src="{% static 'images/ross.jpg' %}" alt="Ross">
+            <button onclick="location.href='/chatbot/?character=Ross'">Select Ross</button>
+        </div>
+        <div class="character">
+            <img src="{% static 'images/monica.jpg' %}" alt="Monica">
+            <button onclick="location.href='/chatbot/?character=Monica'">Select Monica</button>
+        </div>
+        <div class="character">
+            <img src="{% static 'images/chandler.jpg' %}" alt="Chandler">
+            <button onclick="location.href='/chatbot/?character=Chandler'">Select Chandler</button>
+        </div>
+        <div class="character">
+            <img src="{% static 'images/joey.jpg' %}" alt="Joey">
+            <button onclick="location.href='/chatbot/?character=Joey'">Select Joey</button>
+        </div>
+        <div class="character">
+            <img src="{% static 'images/phoebe.jpg' %}" alt="Phoebe">
+            <button onclick="location.href='/chatbot/?character=Phoebe'">Select Phoebe</button>
+        </div>
+    </div>
+</body>
+</html>

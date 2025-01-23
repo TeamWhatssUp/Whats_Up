@@ -1,0 +1,29 @@
+# Python 가상환경
+venv/
+
+# Python 컴파일 파일
+*.py[cod]
+__pycache__/
+
+# 환경 변수 파일
+*.env
+
+# SQLite 데이터베이스
+db.sqlite3
+
+# Django 마이그레이션 파일 (보통은 포함하지만, 필요 없으면 추가)
+*.log
+*.pot
+*.pyc
+*.pyo
+
+# IDE 관련 파일
+.vscode/
+.idea/
+*.swp
+
+# 기타 OS 관련 파일
+.DS_Store
+Thumbs.db
+
+ss

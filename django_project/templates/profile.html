@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사용자 프로필</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+    {% if user.is_authenticated %}
+        <div class="container mt-5">
+            <h1 class="mb-4">사용자 프로필</h1>
+
+            <!-- 사용자 정보 -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">사용자 정보</h5>
+                    <p class="card-text">아이디: {{ request.user.username }}</p>
+                    <p class="card-text">이메일: {{ request.user.email }}</p>
+                </div>
+            </div>
+
+            <!-- 비밀번호 변경 -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">비밀번호 변경</h5>
+                    <form method="post" action="{% url 'password_change' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="id_old_password" class="form-label">현재 비밀번호</label>
+                            <input type="password" name="old_password" id="id_old_password" class="form-control" required 
+                                   placeholder="현재 사용 중인 비밀번호를 입력하세요">
+                            <small class="form-text text-muted">계정을 보호하기 위해 현재 비밀번호를 입력하세요.</small>
+                        </div>
+                        <div class="mb-3 position-relative">
+                            <label for="id_new_password1" class="form-label">새 비밀번호</label>
+                            <input type="password" name="new_password1" id="id_new_password1" class="form-control" required 
+                                   placeholder="새로운 비밀번호를 입력하세요">
+                            <small class="form-text text-muted">8자 이상, 숫자 및 특수 문자를 포함해야 합니다.</small>
+                            <button type="button" class="btn btn-sm btn-outline-secondary position-absolute top-50 end-0 translate-middle-y" 
+                                    onclick="togglePasswordVisibility('id_new_password1')">👁️</button>
+                            <div id="password-strength" class="mt-2"></div>
+                        </div>
+                        <div class="mb-3 position-relative">
+                            <label for="id_new_password2" class="form-label">새 비밀번호 확인</label>
+                            <input type="password" name="new_password2" id="id_new_password2" class="form-control" required 
+                                   placeholder="새로운 비밀번호를 다시 입력하세요">
+                            <small class="form-text text-muted">입력한 새 비밀번호와 동일해야 합니다.</small>
+                            <button type="button" class="btn btn-sm btn-outline-secondary position-absolute top-50 end-0 translate-middle-y" 
+                                    onclick="togglePasswordVisibility('id_new_password2')">👁️</button>
+                        </div>
+                        <button type="submit" class="btn btn-primary">비밀번호 변경</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 로그아웃 -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">로그아웃</h5>
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-secondary">로그아웃</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 계정 삭제 -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">회원 탈퇴</h5>
+                    <form method="post" action="{% url 'delete_account' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger" 
+                                onclick="return confirm('정말 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.')">
+                            회원 탈퇴
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 메시지 출력 -->
+            {% if messages %}
+            <div class="mt-3">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    {% else %}
+        <script>
+            window.location.href = "{% url 'login_page' %}";
+        </script>
+    {% endif %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // 비밀번호 가시성 토글 기능
+        function togglePasswordVisibility(inputId) {
+            var passwordField = document.getElementById(inputId);
+            if (passwordField.type === "password") {
+                passwordField.type = "text";
+            } else {
+                passwordField.type = "password";
+            }
+        }
+
+        // 비밀번호 강도 표시 기능
+        document.getElementById('id_new_password1').addEventListener('input', function () {
+            var strengthText = document.getElementById('password-strength');
+            var password = this.value;
+            var strength = 0;
+
+            if (password.length >= 8) strength++;
+            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+            if (/\d/.test(password)) strength++;
+            if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength++;
+
+            switch (strength) {
+                case 0:
+                case 1:
+                    strengthText.innerHTML = '<span class="text-danger">비밀번호가 너무 약합니다.</span>';
+                    break;
+                case 2:
+                    strengthText.innerHTML = '<span class="text-warning">보통 수준의 비밀번호입니다.</span>';
+                    break;
+                case 3:
+                    strengthText.innerHTML = '<span class="text-info">좋은 비밀번호입니다.</span>';
+                    break;
+                case 4:
+                    strengthText.innerHTML = '<span class="text-success">강력한 비밀번호입니다!</span>';
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>
