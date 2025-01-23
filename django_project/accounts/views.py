@@ -321,12 +321,18 @@ def profile_view(request):
 
 # 비밀번호 변경
 class CustomPasswordChangeView(PasswordChangeView):
+    template_name = 'profile.html'
+    success_url = reverse_lazy('login')  # 로그인 페이지로 리디렉션
+
     def form_valid(self, form):
-        form.save()  # 비밀번호 저장
-        return JsonResponse({"success": True, "message": "비밀번호가 성공적으로 변경되었습니다!"}, status=200)
+        # 성공 메시지 추가
+        messages.success(self.request, "비밀번호가 성공적으로 변경되었습니다. 다시 로그인해주세요.")
+        return super().form_valid(form)
 
     def form_invalid(self, form):
-        return JsonResponse({"success": False, "errors": form.errors}, status=400)
+        # 실패 메시지 추가
+        messages.error(self.request, "비밀번호 변경에 실패했습니다. 입력 정보를 확인해주세요.")
+        return super().form_invalid(form)
 
 
 @login_required

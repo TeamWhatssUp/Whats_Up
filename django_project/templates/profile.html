@@ -32,15 +32,17 @@
                 </div>
             </div>
 
-            <!-- 비밀번호 변경 -->
+<!-- 비밀번호 변경 -->
 <div class="card mb-4">
     <div class="card-body">
         <h5 class="card-title">비밀번호 변경</h5>
-        <form id="password-change-form">
+        <form id="password-change-form" method="post" action="{% url 'password_change' %}">
             {% csrf_token %}
-            <div class="mb-3">
+            <div class="mb-3 position-relative">
                 <label for="id_old_password" class="form-label">현재 비밀번호</label>
                 <input type="password" name="old_password" id="id_old_password" class="form-control" required>
+                <button type="button" class="btn btn-sm btn-outline-secondary position-absolute top-50 end-0 translate-middle-y" 
+                        onclick="togglePasswordVisibility('id_old_password')">👁️</button>
             </div>
             <div class="mb-3 position-relative">
                 <label for="id_new_password1" class="form-label">새 비밀번호</label>
@@ -61,10 +63,22 @@
 </div>
 
 <script>
+    // 비밀번호 가시성 토글 기능
+    function togglePasswordVisibility(id) {
+        const input = document.getElementById(id);
+        if (input.type === "password") {
+            input.type = "text";
+        } else {
+            input.type = "password";
+        }
+    }
+</script>
+
+<!-- 팝업 창 스크립트 -->
+<script>
     document.getElementById("password-change-form").addEventListener("submit", async function (event) {
         event.preventDefault(); // 기본 폼 제출 방지
         const form = event.target;
-        const formData = new FormData(form);
 
         try {
             const response = await fetch(form.action, {
@@ -72,30 +86,70 @@
                 headers: {
                     "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,
                 },
-                body: formData,
+                body: new FormData(form),
             });
 
-            const contentType = response.headers.get("content-type");
-            console.log("Content-Type:", contentType);  // 응답 Content-Type 확인
-
-            if (response.ok && contentType && contentType.includes("application/json")) {
-                const data = await response.json();
-                alert(data.message); // 성공 메시지
-                window.location.href = "{% url 'profile' %}"; // 성공 시 프로필 페이지로 리다이렉트
-            } else if (response.ok && contentType && contentType.includes("text/html")) {
-                const errorHtml = await response.text();
-                console.error("HTML Response Received:", errorHtml);
-                alert("비밀번호 변경 요청이 처리되었지만 예상치 못한 응답이 수신되었습니다.");
+            if (response.ok) {
+                // 성공 팝업 표시
+                openPopup("비밀번호가 성공적으로 변경되었습니다. 다시 로그인해주세요.", true);
             } else {
-                const errorText = await response.text();
-                console.error("Unexpected Response:", errorText);
-                alert("서버 응답 형식이 올바르지 않습니다.");
+                // 실패 팝업 표시
+                openPopup("비밀번호 변경에 실패했습니다. 입력 정보를 확인해주세요.", false);
             }
         } catch (error) {
             console.error("Fetch error:", error);
-            alert("서버와의 통신 중 문제가 발생했습니다. 다시 시도해 주세요.");
+            openPopup("서버와의 통신 중 문제가 발생했습니다.", false);
         }
     });
+
+    // 팝업 창 열기
+    function openPopup(message, isSuccess) {
+        const popup = window.open("", "popup", "width=400,height=200,resizable=no");
+        popup.document.write(`
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>알림</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        text-align: center;
+                        padding: 20px;
+                        background-color: ${isSuccess ? "#d4edda" : "#f8d7da"};
+                        color: ${isSuccess ? "#155724" : "#721c24"};
+                        border: 1px solid ${isSuccess ? "#c3e6cb" : "#f5c6cb"};
+                        border-radius: 5px;
+                    }
+                    h1 {
+                        font-size: 18px;
+                        margin-bottom: 10px;
+                    }
+                    button {
+                        padding: 10px 20px;
+                        background-color: ${isSuccess ? "#28a745" : "#dc3545"};
+                        color: white;
+                        border: none;
+                        border-radius: 5px;
+                        cursor: pointer;
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>${message}</h1>
+                <button onclick="window.close()">닫기</button>
+            </body>
+            </html>
+        `);
+
+        if (isSuccess) {
+            // 2초 후 로그인 페이지로 리디렉션
+            setTimeout(() => {
+                window.location.href = "{% url 'login' %}";
+            }, 2000);
+        }
+    }
 </script>
 
 <!-- 로그아웃 -->
