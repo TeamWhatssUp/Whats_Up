@@ -6,7 +6,6 @@ from rest_framework import status
 from .serializers import UserSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.shortcuts import redirect
-from .user_profile import profile_view as handle_profile_view
 from django.core.files.storage import default_storage
 from django.conf import settings
 from django.views import View
@@ -39,6 +38,22 @@ from .custom_chat import get_user_chat_rules # 저장한 대화 규칙을 챗봇
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login 
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.views import PasswordChangeView
+from django.urls import reverse_lazy
+from django.contrib.messages.views import SuccessMessageMixin
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth import logout
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from django.contrib.auth.hashers import check_password
+from django.views.decorators.csrf import csrf_protect
+from django.db import DatabaseError
+from django.views.decorators.http import require_POST
+import logging
+from django.views.decorators.csrf import csrf_exempt
+
+
+
 from .models import Conversation
 from django.db import models
 from .models import ChatMessage
@@ -303,6 +318,91 @@ def transcribe_audio_with_whisper(audio_path):
     except Exception as e:
         logger.error(f"Error during transcription: {e}")
         return None
+    
+
+# 프로필 페이지
+@login_required
+def profile_view(request):
+    try:
+        if request.method == "POST":
+            password_form = PasswordChangeForm(request.user, request.POST)
+            if password_form.is_valid():
+                password_form.save()  # 비밀번호 저장
+                update_session_auth_hash(request, password_form.user)  # 세션 유지
+                messages.success(request, "비밀번호가 성공적으로 변경되었습니다.")
+                return redirect("profile")  # 성공 후 리다이렉트
+            else:
+                messages.error(request, "비밀번호 변경에 실패했습니다. 입력값을 확인해주세요.")
+                logger.warning(f"비밀번호 변경 실패: {password_form.errors}")
+        else:
+            password_form = PasswordChangeForm(request.user)  # GET 요청 처리
+
+        # 모든 경로에서 password_form을 초기화
+        context = {
+            "username": request.user.username,
+            "email": request.user.email,
+            "password_form": password_form,
+        }
+        return render(request, "profile.html", context)
+    except Exception as e:
+        logger.error(f"예외 발생: {str(e)}")
+        messages.error(request, "알 수 없는 오류가 발생했습니다.")
+        return redirect("profile")  # 예외 발생 시 리다이렉트
+
+
+# 비밀번호 변경
+class CustomPasswordChangeView(PasswordChangeView):
+    template_name = 'profile.html'
+    success_url = reverse_lazy('login')  # 로그인 페이지로 리디렉션
+
+    def form_valid(self, form):
+        # 비밀번호 변경 성공 시 기본 동작 유지
+        response = super().form_valid(form)
+        # 추가: 상태 코드와 JSON 응답 반환
+        return JsonResponse({"message": "비밀번호가 성공적으로 변경되었습니다."}, status=200)
+
+    def form_invalid(self, form):
+        # 비밀번호 변경 실패 시 기본 동작 유지
+        super().form_invalid(form)
+        # 추가: 상태 코드와 JSON 응답 반환
+        return JsonResponse(
+            {"message": "비밀번호 변경에 실패했습니다. 입력 정보를 확인해주세요."},
+            status=400,
+        )
+
+    def dispatch(self, request, *args, **kwargs):
+        # 인증되지 않은 사용자 처리
+        if not request.user.is_authenticated:
+            return JsonResponse({"message": "인증되지 않은 사용자입니다."}, status=401)
+        return super().dispatch(request, *args, **kwargs)
+
+
+@login_required
+@csrf_protect
+def logout_view(request):
+    if request.method == "POST":
+        logout(request)  # 세션 종료
+        messages.success(request, "로그아웃 되었습니다.")
+        response = JsonResponse({"message": "로그아웃 되었습니다."}, status=200)
+        response.set_cookie('csrftoken', request.META.get('CSRF_COOKIE', ''))  # 새 CSRF 토큰 전달
+        return response
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+
+logger = logging.getLogger(__name__)
+
+
+@require_POST
+def delete_account_view(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "인증되지 않은 사용자입니다."}, status=401)
+
+    try:
+        user = request.user
+        user.delete()
+        return JsonResponse({"message": "회원 탈퇴가 완료되었습니다."}, status=200)
+    except Exception as e:
+        return JsonResponse({"error": "서버 오류가 발생했습니다.", "details": str(e)}, status=500)
     
 
 logger = logging.getLogger(__name__)
