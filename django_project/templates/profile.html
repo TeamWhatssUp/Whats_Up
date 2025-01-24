@@ -47,7 +47,7 @@
             <div class="mb-3 position-relative">
                 <label for="id_new_password1" class="form-label">새 비밀번호</label>
                 <input type="password" name="new_password1" id="id_new_password1" class="form-control" required>
-                <small class="form-text text-muted">8자 이상, 숫자 및 특수 문자를 포함해야 합니다.</small>
+                <small class="form-text text-muted">7자 이상, 숫자와 문자를 포함해야 합니다.</small>
                 <button type="button" class="btn btn-sm btn-outline-secondary position-absolute top-50 end-0 translate-middle-y" 
                         onclick="togglePasswordVisibility('id_new_password1')">👁️</button>
             </div>
@@ -188,14 +188,6 @@
     {% endif %}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
-    <script>
-        
-        // 비밀번호 가시성 토글 기능
-        function togglePasswordVisibility(inputId) {
-            const passwordField = document.getElementById(inputId);
-            passwordField.type = passwordField.type === "password" ? "text" : "password";
-        }
-    </script>
     <script>
         document.getElementById('id_new_password1').addEventListener('input', function () {
             const password = this.value;
