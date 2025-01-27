@@ -35,6 +35,7 @@ from rest_framework import status
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 from .chat_rules import chat_rules_view, save_chat_rules # 대화 규칙 저장 기능 추가
+from .custom_chat import get_user_chat_rules # 저장한 대화 규칙을 챗봇 프롬프트 활용
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login 
 from django.contrib.auth.hashers import make_password
@@ -118,9 +119,32 @@ def index(request):
     # 기본 경로에서 JSON 응답 반환
     return JsonResponse({'message': 'Hello, this is accounts app!'})
 
+@login_required
 def chatbot_page(request):
-    # /chatbot/ 경로에서 chatbot.html 템플릿 렌더링
-    return render(request, 'chatbot.html')
+    character = request.GET.get('character', 'Default')
+    user_chat_rules = get_user_chat_rules(request.user)
+
+    # 사용자 정보 반영한 맞춤형 인트로 생성
+    introduction = user_chat_rules.get('introduction', '멋진 하루야!')
+    chat_rules = user_chat_rules.get('chat_rules', '자연스럽게 대화하고 싶어요.')
+
+    # 캐릭터 별 맞춤 인트로 설정
+    character_intros = {
+        "Rachel": f"안녕 나는 Rachel이야. 너는 '{introduction}'한 사람이구나? '{chat_rules}'처럼 대화하고 싶다고 들었어. 나랑 대화하자!",
+        "Ross": f"Hey! 나는 Ross야. '{introduction}'가 멋지네. '{chat_rules}' 방식으로 대화해볼까?",
+        "Chandler": f"Chandler Bing here! '{introduction}', huh? '{chat_rules}'라니. 재미있겠는걸?",
+        "Monica": f"안녕! 나는 Monica야. '{introduction}'이 참 좋아보여! '{chat_rules}'에 따라 대화할게.",
+        "Joey": f"How you doin'? '{introduction}'... '{chat_rules}'로 이야기해볼까?",
+        "Phoebe": f"Hi! 나는 Phoebe야! '{introduction}', 좋다! '{chat_rules}' 좋아해!",
+    }
+
+    display_intro = character_intros.get(character, f"Hello! I'm {character}, let's talk.")
+
+    return render(request, 'chatbot.html', {
+        'character': character,
+        'introduction': display_intro,  # 인트로가 항상 보이도록 수정
+        'chat_rules': ''
+    })
 
 @login_required  # 로그인한 사용자만 접근 가능
 def profile_view(request):
@@ -129,11 +153,6 @@ def profile_view(request):
 def friends_selection(request):
     # 등장인물 선택 화면 렌더링
     return render(request, 'friends_selection.html')
-
-def chatbot_page(request):
-    # URL 쿼리 파라미터에서 캐릭터 이름 가져오기
-    character = request.GET.get('character', 'Default')
-    return render(request, 'chatbot.html', {'character': character})
 
 # 캐릭터 정보 (예제)
 characters = {
@@ -164,8 +183,8 @@ def chatbot_api(request):
             return JsonResponse({"error": "Message is required"}, status=400)
 
         try:
-            # LLM의 generate_chat_response 호출 (캐릭터 이름과 메시지 전달)
-            response = generate_chat_response(character_name, user_query)
+            # 사용자 정보를 포함하여 챗봇 응답 생성
+            response = generate_chat_response(character_name, user_query, user=request.user)
 
             # TTS 생성 파일 경로
             timestamp = int(time.time())

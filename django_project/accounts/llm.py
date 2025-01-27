@@ -6,6 +6,7 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.text_splitter import CharacterTextSplitter
 from django.conf import settings
+from .custom_chat import get_user_chat_rules  # 대화 규칙 가져오기 추가
 import json
 
 
@@ -150,8 +151,7 @@ def create_characters():
         )
 ]
 
-
-def generate_chat_response(character_name, user_query, summary_threshold=500):
+def generate_chat_response(character_name, user_query, user=None, summary_threshold=500):
     """챗봇 응답을 생성하는 함수"""
     # 캐릭터 생성 및 선택
     characters = create_characters()
@@ -161,17 +161,38 @@ def generate_chat_response(character_name, user_query, summary_threshold=500):
     if not selected_character:
         return f"Character '{character_name}' not found."
 
-    # 캐릭터 프롬프트 로드
-    character_prompt = load_character_prompt(selected_character.name)
+    # 사용자 정보 가져오기
+    user_info = {'introduction': '', 'chat_rules': ''}
+    if user and user.is_authenticated:
+        user_info = get_user_chat_rules(user)
 
-    # 캐릭터 프롬프트 생성 (캐릭터 클래스 포함)
+    # 사용자 자기소개 및 대화 규칙 반영
+    user_intro = user_info['introduction'] or "I am learning English."
+    user_chat_rules = user_info['chat_rules'] or "Be polite and provide examples."
+
+    # 캐릭터별 맞춤형 인트로 메시지 생성
+    character_intro_templates = {
+        "Rachel": f"Hey, I'm Rachel! I heard you're '{user_intro}', and you prefer to chat like '{user_chat_rules}'. Sounds exciting, let's chat!",
+        "Ross": f"Hi, I'm Ross. So, you're '{user_intro}', and you like conversations to be '{user_chat_rules}'. Let's talk science and love!",
+        "Monica": f"Hi, I'm Monica! I see you're '{user_intro}', and you'd like things '{user_chat_rules}'. Organization is key!",
+        "Chandler": f"Could I BE any more interested? You're '{user_intro}', and you prefer '{user_chat_rules}'. Let's get started!",
+        "Joey": f"How you doin'? You're '{user_intro}', and you prefer '{user_chat_rules}'. Let's have some fun!",
+        "Phoebe": f"Hey, I'm Phoebe! I see you're '{user_intro}', and you like it '{user_chat_rules}'. Let's sing a song about it!",
+    }
+
+    character_intro = character_intro_templates.get(selected_character.name, 
+        f"Hi, I'm {selected_character.name}. I heard you're '{user_intro}', and you'd like to chat like '{user_chat_rules}'. Let's do it!"
+    )
+
     character_prompt = f"""
     You are {selected_character.name}, a {selected_character.job}. 
     Your personality: {selected_character.personality}.
     Your catchphrases: {" | ".join(selected_character.catchphrases)}.
     Your hobbies: {", ".join(selected_character.hobbies)}.
     You are having a conversation with a friend. Be {", ".join(selected_character.conversation_patterns)}.
-    Answer concisely in 3 sentences or less.
+
+    Start with this personalized introduction: "{character_intro}"
+    The user prefers the conversation style: "{user_chat_rules}".
     """
 
     # 대본 데이터 로드

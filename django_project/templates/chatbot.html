@@ -14,9 +14,39 @@
         let recognition = null;
         let isRecognizing = false;
 
-        // 페이지 로드 시 캐릭터 이름 표시
+        // 페이지 로드 시 캐릭터 이름 표시 및 인트로 메시지 추가
         window.onload = () => {
             document.getElementById("character-name").innerText = character || "Default Character";
+<<<<<<< HEAD
+=======
+
+            const chatBox = document.getElementById("chat-box");
+
+            // 인트로 메시지가 이미 추가되지 않았다면 추가
+            if (!chatBox.querySelector(".intro-message")) {
+                const introMessage = document.createElement("div");
+                introMessage.classList.add("intro-message");
+                introMessage.style.textAlign = "right";
+                introMessage.style.padding = "10px";
+                introMessage.style.margin = "10px 0";
+                introMessage.style.border = "1px solid #ccc";
+                introMessage.style.borderRadius = "10px";
+                introMessage.style.backgroundColor = "#f1f1f1";
+
+                const messageText = document.createElement("p");
+                messageText.innerHTML = `<strong>${character}:</strong> {{ introduction|escapejs }}`;
+                introMessage.appendChild(messageText);
+                chatBox.appendChild(introMessage);
+            }
+
+            // 사용자 입력 필드에서 엔터 키 감지
+            document.getElementById("user-input").addEventListener("keydown", function(event) {
+                if (event.key === "Enter") { 
+                    event.preventDefault(); // 기본 동작 방지
+                    document.getElementById("SendButton").click(); // Send 버튼 클릭
+                }
+            });
+>>>>>>> 4651627 (WU-17 : chat_rules 챗봇 프롬프트에 적용, 챗봇 인트로 메세지 생성, /chat_rules/에서 저장한 이후 /friends_selection/로 이동하도록 경로 변경)
         };
 
         async function sendMessage(message, isSTT = false) {
@@ -179,10 +209,14 @@
 
     <h1>Chatbot with <span id="character-name"></span></h1>
     <div id="chat-box" style="border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto;"></div>
+    </div>
+    <!-- 사용자 입력 필드 -->
     <div style="display: flex; gap: 10px; margin-top: 10px;">
         <input id="user-input" type="text" placeholder="Type your message here" style="flex: 1;">
         <button onclick="sendMessage()">Send</button>
     </div>
+
+    <!-- 녹음 기능  -->
     <div class="container">
         <div class="recorder">
             <button id="recordBtn" class="button record">Record</button>
@@ -196,6 +230,7 @@
             <p id="transcriptionText"></p>
         </div>
     </div>
+
     <script>
         let mediaRecorder;
         let audioChunks = [];
@@ -247,7 +282,6 @@
             }
         });
     
-        
         // 사용자가 녹음한 오디오가 완료된 후 오디오 태그를 사용자 메시지 바로 아래에 배치
         function sendAudioToServer(audioBlob) {
             const formData = new FormData();
@@ -304,6 +338,18 @@
             }, 0); // DOM 업데이트 후 실행
         }
 
-            </script>
-        </body>
-        </html>
+        document.addEventListener("DOMContentLoaded", function() {
+            const chatBox = document.getElementById("chat-box");
+
+            // 이미 템플릿에서 인트로가 렌더링되었기 때문에 JS로 추가하지 않음
+            function scrollToBottom(element) {
+                setTimeout(() => {
+                    element.scrollTop = element.scrollHeight;
+                }, 0);
+            }
+
+            scrollToBottom(chatBox); // 페이지 로드 시 채팅창 하단 이동
+        });
+    </script>
+</body>
+</html>
