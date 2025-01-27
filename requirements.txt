@@ -13,7 +13,6 @@ httpx
 idna
 jiter
 openai
-PyAudio
 pydantic
 PyJWT
 python-dotenv
