@@ -27,7 +27,8 @@ SECRET_KEY = "django-insecure-!0&6*vmjtu)$=+o$=^!%+lnpzf5nu1qnvh&aup6rmf&@bl83k9
 DEBUG = True
 
 ALLOWED_HOSTS = ['13.125.246.221',
-                '127.0.0.1']
+                '127.0.0.1',
+                'whatsssup.com']
 
 
 # Application definition
