@@ -24,7 +24,7 @@ def profile_view(request):
                 user = password_form.save()
                 update_session_auth_hash(request, user)  # 세션 유지
                 messages.success(request, "비밀번호가 성공적으로 변경되었습니다.")
-                return redirect('profile')
+                return redirect('login')
             else:
                 messages.error(request, "비밀번호 변경에 실패했습니다. 다시 시도해 주세요.")
         elif 'delete_account' in request.POST:  # 회원 탈퇴 처리

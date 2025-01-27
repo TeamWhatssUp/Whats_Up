@@ -11,6 +11,19 @@
         <div class="container mt-5">
             <h1 class="mb-4">사용자 프로필</h1>
 
+
+            <!-- 메시지 출력 -->
+            {% if messages %}
+                <div>
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
             <!-- 사용자 정보 -->
             <div class="card mb-4">
                 <div class="card-body">
@@ -20,121 +33,172 @@
                 </div>
             </div>
 
-            <!-- 비밀번호 변경 -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">비밀번호 변경</h5>
-                    <form method="post" action="{% url 'password_change' %}">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="id_old_password" class="form-label">현재 비밀번호</label>
-                            <input type="password" name="old_password" id="id_old_password" class="form-control" required 
-                                   placeholder="현재 사용 중인 비밀번호를 입력하세요">
-                            <small class="form-text text-muted">계정을 보호하기 위해 현재 비밀번호를 입력하세요.</small>
-                        </div>
-                        <div class="mb-3 position-relative">
-                            <label for="id_new_password1" class="form-label">새 비밀번호</label>
-                            <input type="password" name="new_password1" id="id_new_password1" class="form-control" required 
-                                   placeholder="새로운 비밀번호를 입력하세요">
-                            <small class="form-text text-muted">8자 이상, 숫자 및 특수 문자를 포함해야 합니다.</small>
-                            <button type="button" class="btn btn-sm btn-outline-secondary position-absolute top-50 end-0 translate-middle-y" 
-                                    onclick="togglePasswordVisibility('id_new_password1')">👁️</button>
-                            <div id="password-strength" class="mt-2"></div>
-                        </div>
-                        <div class="mb-3 position-relative">
-                            <label for="id_new_password2" class="form-label">새 비밀번호 확인</label>
-                            <input type="password" name="new_password2" id="id_new_password2" class="form-control" required 
-                                   placeholder="새로운 비밀번호를 다시 입력하세요">
-                            <small class="form-text text-muted">입력한 새 비밀번호와 동일해야 합니다.</small>
-                            <button type="button" class="btn btn-sm btn-outline-secondary position-absolute top-50 end-0 translate-middle-y" 
-                                    onclick="togglePasswordVisibility('id_new_password2')">👁️</button>
-                        </div>
-                        <button type="submit" class="btn btn-primary">비밀번호 변경</button>
-                    </form>
-                </div>
-            </div>
 
-            <!-- 로그아웃 -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">로그아웃</h5>
-                    <form method="post" action="{% url 'logout' %}">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-secondary">로그아웃</button>
-                    </form>
-                </div>
+<!-- 비밀번호 변경 -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">비밀번호 변경</h5>
+        <form id="password-change-form" method="post" action="{% url 'password_change' %}">
+            {% csrf_token %}
+            <div class="mb-3 position-relative">
+                <label for="id_old_password" class="form-label">현재 비밀번호</label>
+                <input type="password" name="old_password" id="id_old_password" class="form-control" required>
+                <button type="button" class="btn btn-sm btn-outline-secondary position-absolute top-50 end-0 translate-middle-y" 
+                        onclick="togglePasswordVisibility('id_old_password')">👁️</button>
             </div>
+            <div class="mb-3 position-relative">
+                <label for="id_new_password1" class="form-label">새 비밀번호</label>
+                <input type="password" name="new_password1" id="id_new_password1" class="form-control" required>
+                <small class="form-text text-muted">7자 이상, 숫자와 문자를 포함해야 합니다.</small>
+                <button type="button" class="btn btn-sm btn-outline-secondary position-absolute top-50 end-0 translate-middle-y" 
+                        onclick="togglePasswordVisibility('id_new_password1')">👁️</button>
+            </div>
+            <div class="mb-3 position-relative">
+                <label for="id_new_password2" class="form-label">새 비밀번호 확인</label>
+                <input type="password" name="new_password2" id="id_new_password2" class="form-control" required>
+                <button type="button" class="btn btn-sm btn-outline-secondary position-absolute top-50 end-0 translate-middle-y" 
+                        onclick="togglePasswordVisibility('id_new_password2')">👁️</button>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">비밀번호 변경</button>
+        </form>
+    </div>
+</div>
 
-            <!-- 계정 삭제 -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">회원 탈퇴</h5>
-                    <form method="post" action="{% url 'delete_account' %}">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger" 
-                                onclick="return confirm('정말 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.')">
-                            회원 탈퇴
-                        </button>
-                    </form>
-                </div>
-            </div>
+<script>
+    // 비밀번호 가시성 토글 기능
+    function togglePasswordVisibility(id) {
+        const input = document.getElementById(id);
+        if (input.type === "password") {
+            input.type = "text";
+        } else {
+            input.type = "password";
+        }
+    }
 
-            <!-- 메시지 출력 -->
-            {% if messages %}
-            <div class="mt-3">
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }}" role="alert">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            </div>
-            {% endif %}
-        </div>
+
+    // 비밀번호 변경 요청 처리
+    document.getElementById("password-change-form").addEventListener("submit", async function (event) {
+        event.preventDefault(); // 기본 폼 제출 방지
+        const form = event.target;
+
+        try {
+            const response = await fetch(form.action, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+                body: new FormData(form),
+            });
+
+            if (response.ok) {
+                // 성공 시 alert 표시 후 로그아웃
+                alert("비밀번호가 성공적으로 변경되었습니다. 자동 로그아웃됩니다.");
+                setTimeout(() => {
+                    window.location.href = "{% url 'login' %}"; // 로그아웃 후 로그인 페이지로 이동
+                }, 2000);
+            } else {
+                // 실패 시 alert 표시
+                alert("비밀번호 변경에 실패했습니다. 다시 시도해주세요.");
+            }
+        } catch (error) {
+            console.error("Fetch error:", error);
+            alert("서버와의 통신 중 문제가 발생했습니다.");
+        }
+    });
+</script>
+
+<!-- 로그아웃 -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">로그아웃</h5>
+        <form id="logout-form" method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-secondary">로그아웃</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById("logout-form").addEventListener("submit", async function (event) {
+        event.preventDefault(); // 기본 폼 제출 방지
+        const form = event.target;
+
+        try {
+            const response = await fetch(form.action, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+            });
+
+            if (response.ok) {
+                alert("로그아웃이 완료되었습니다."); // 팝업 메시지
+                window.location.href = "{% url 'login' %}"; // 로그인 페이지로 리다이렉트
+            } else {
+                alert("로그아웃 중 문제가 발생했습니다. 다시 시도해주세요.");
+            }
+        } catch (error) {
+            console.error("Fetch error:", error);
+            alert("서버와의 통신 중 문제가 발생했습니다.");
+        }
+    });
+</script>
+
+
+<!-- 회원 탈퇴 -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">회원 탈퇴</h5>
+        <form id="delete-account-form" method="post" action="/account/delete-account/">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">회원 탈퇴</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById("delete-account-form").addEventListener("submit", async function (event) {
+    event.preventDefault();
+    const form = event.target;
+
+    try {
+        const response = await fetch(form.action, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+        });
+
+
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+            const data = await response.json();
+            alert(data.message);
+            window.location.href = "/login/";
+        } else {
+            alert("서버 응답 형식이 올바르지 않습니다.");
+        }
+    } catch (error) {
+        console.error("Fetch error:", error);
+        alert("서버와의 통신 중 문제가 발생했습니다.");
+    }
+});
+</script>
+
     {% else %}
         <script>
-            window.location.href = "{% url 'login_page' %}";
+            window.location.href = "{% url 'login' %}";
         </script>
     {% endif %}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
+    
     <script>
-        // 비밀번호 가시성 토글 기능
-        function togglePasswordVisibility(inputId) {
-            var passwordField = document.getElementById(inputId);
-            if (passwordField.type === "password") {
-                passwordField.type = "text";
-            } else {
-                passwordField.type = "password";
-            }
-        }
-
-        // 비밀번호 강도 표시 기능
         document.getElementById('id_new_password1').addEventListener('input', function () {
-            var strengthText = document.getElementById('password-strength');
-            var password = this.value;
-            var strength = 0;
-
-            if (password.length >= 8) strength++;
-            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
-            if (/\d/.test(password)) strength++;
-            if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength++;
-
-            switch (strength) {
-                case 0:
-                case 1:
-                    strengthText.innerHTML = '<span class="text-danger">비밀번호가 너무 약합니다.</span>';
-                    break;
-                case 2:
-                    strengthText.innerHTML = '<span class="text-warning">보통 수준의 비밀번호입니다.</span>';
-                    break;
-                case 3:
-                    strengthText.innerHTML = '<span class="text-info">좋은 비밀번호입니다.</span>';
-                    break;
-                case 4:
-                    strengthText.innerHTML = '<span class="text-success">강력한 비밀번호입니다!</span>';
-                    break;
-            }
+            const password = this.value;
+            const message = password.length >= 8 ? "사용 가능한 비밀번호입니다." : "비밀번호는 최소 8자 이상이어야 합니다.";
+            document.getElementById('password-feedback').textContent = message;
         });
+
     </script>
 </body>
 </html>
