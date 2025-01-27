@@ -45,7 +45,7 @@
             document.getElementById("user-input").addEventListener("keydown", function(event) {
                 if (event.key === "Enter") { 
                     event.preventDefault(); // 기본 동작 방지
-                    document.getElementById("SendButton").click(); // Send 버튼 클릭
+                    sendMessage(); // 직접 sendMessage 호출
                 }
             });
 
@@ -54,6 +54,21 @@
         async function sendMessage(message, isSTT = false) {
             const userInput = message || document.getElementById("user-input").value;
             const chatBox = document.getElementById("chat-box");
+
+            // 캐릭터별 목소리 설정
+            const characterVoiceMapping = {
+                "Default": "nova", 
+                "Monica": "nova", 
+                "Chandler": "ash",
+                "Rachel":"coral",
+                "Ross":"onyx",
+                "Joey":"echo",
+                "Phoebe":"shimmer" 
+                
+            };
+
+            // 캐릭터에 맞는 목소리 가져오기
+            const characterVoice = characterVoiceMapping[character] || "nova"; // 기본은 "nova"
 
             // 로딩 애니메이션 추가
             const loadingElement = document.createElement("div");
@@ -83,7 +98,8 @@
                     body: JSON.stringify({ 
                         message: userInput, 
                         character: character, 
-                        id: "{{ request.user.id }}" // 로그인한 사용자 ID 추가
+                        id: "{{ request.user.id }}", // 로그인한 사용자 ID 추가
+                        voice: characterVoice
                     }),
                 });
 
