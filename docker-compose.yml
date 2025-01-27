@@ -11,7 +11,7 @@ services:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
+    command: bash -c "python django_project/manage.py migrate && python django_project/manage.py collectstatic && python django_project/manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/code
     ports:
