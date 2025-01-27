@@ -1,0 +1,72 @@
+/* 헤더 전체 스타일 */
+.header {
+    height: 80px;
+    background-color: #0F1C2E;
+    border-bottom: 1px solid #ddd;
+    padding: 10px 20px;
+}
+
+/* 내부 컨테이너 스타일 */
+.inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* 로고 스타일 */
+.logo-img {
+    height: 60px;  /* 로고 크기 */
+    width: auto;
+}
+
+/* 네비게이션 링크 스타일 */
+.nav-links {
+    display: flex;
+    gap: 20px;
+}
+
+/* 링크 공통 스타일 */
+.link {
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: bold;
+    color: #f9f9f9;
+    transition: color 0.3s ease;
+}
+
+/* 링크 호버 효과 */
+.link:hover {
+    color: #007bff;
+}
+
+/* 활성화된 링크 스타일 */
+.link.active {
+    color: #007bff;
+    border-bottom: 2px solid #007bff;
+}
+
+/* 햄버거 메뉴 버튼 기본 숨김 */
+.burger-menu {
+    display: none;
+    font-size: 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+/* 반응형 디자인 (모바일에서 적용) */
+@media (max-width: 768px) {
+    .nav-links {
+        display: none;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .nav-links.open {
+        display: flex;
+    }
+    .burger-menu {
+        display: block;
+    }
+}
