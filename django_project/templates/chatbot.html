@@ -10,6 +10,9 @@
         const urlParams = new URLSearchParams(window.location.search);
         const character = urlParams.get('character');
 
+        // CSRF 토큰 가져오기
+        const csrftoken = "{{ csrf_token }}";  // Django 템플릿에서 CSRF 토큰 가져오기
+
         // 음성 인식 변수
         let recognition = null;
         let isRecognizing = false;
@@ -45,7 +48,7 @@
                 }
             });
         };
-
+        
         async function sendMessage(message, isSTT = false) {
             const userInput = message || document.getElementById("user-input").value;
             const chatBox = document.getElementById("chat-box");
@@ -73,8 +76,13 @@
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
+                        "X-CSRFToken": csrftoken,  // CSRF 토큰 추가
                     },
-                    body: JSON.stringify({ message: userInput, character: character }),
+                    body: JSON.stringify({ 
+                        message: userInput, 
+                        character: character, 
+                        id: "{{ request.user.id }}" // 로그인한 사용자 ID 추가
+                    }),
                 });
 
                 const data = await response.json();
@@ -133,25 +141,17 @@
             }
         }
 
-
-
-
-        
     </script>
 
     <link rel="stylesheet" href="{% static 'css/header.css' %}">
 
     <style>
-
-    
         /* 오른쪽 정렬 스타일 */
         .chatbot-message.right {
             text-align: right;
             position: absolute;
             right: 10px;
         }
-
-
 
         /* 챗봇 이름을 오른쪽 끝에 위치시키는 스타일 */
         .chatbot-name {
@@ -166,12 +166,9 @@
             justify-content: flex-end;
             align-items: center;
         }
-    </style>
 
-    <style>
-
-    /* 로딩 애니메이션 스타일 */
-    .loading-dots {
+        /* 로딩 애니메이션 스타일 */
+        .loading-dots {
             display: inline-block;
             margin-left: 10px;
             width: 20px;
@@ -181,8 +178,6 @@
             border-top: 3px solid transparent;
             animation: rotate-circle 1s linear infinite;
         }
-
-
 
         /* 원 회전 애니메이션 */
         @keyframes rotate-circle {

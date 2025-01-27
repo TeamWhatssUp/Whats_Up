@@ -39,6 +39,9 @@ from .custom_chat import get_user_chat_rules # 저장한 대화 규칙을 챗봇
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login 
 from django.contrib.auth.hashers import make_password
+from .models import Conversation
+from django.db import models
+from .models import ChatMessage
 # Create your views here.
 
 def index(request):
@@ -172,19 +175,28 @@ client = OpenAI(
 
 
 @csrf_exempt
+@login_required  # 로그인된 사용자만 접근 가능
 def chatbot_api(request):
     if request.method == "POST":
         data = json.loads(request.body)
-        character_name = data.get("character", "Default")  # 요청에서 캐릭터 이름 가져오기
-        user_query = data.get("message", "")  # 요청에서 사용자 메시지 가져오기
-        voice = data.get("voice", "nova")  # 요청에서 목소리 정보 가져오기 (기본값 "nova")
+        character_name = data.get("character", "Default")
+        user_query = data.get("message", "")
+        voice = data.get("voice", "nova")
+        user_id = request.user.id  # 로그인한 사용자의 ID 가져오기
 
         if not user_query:
             return JsonResponse({"error": "Message is required"}, status=400)
 
+        # 채팅 기록 저장 (사용자 메시지 저장)
+        chat_message = ChatMessage.objects.create(user=request.user, character=character_name, message=user_query)
+
         try:
             # 사용자 정보를 포함하여 챗봇 응답 생성
             response = generate_chat_response(character_name, user_query, user=request.user)
+
+            # 챗봇의 응답을 모델에 저장
+            chat_message.response = response  # 챗봇의 응답 저장
+            chat_message.save()  # 변경 사항 저장
 
             # TTS 생성 파일 경로
             timestamp = int(time.time())
@@ -291,3 +303,54 @@ def transcribe_audio_with_whisper(audio_path):
     except Exception as e:
         logger.error(f"Error during transcription: {e}")
         return None
+    
+
+logger = logging.getLogger(__name__)
+
+@csrf_exempt
+def save_conversation(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            conversation_text = data.get('conversation', '')
+            
+            if not conversation_text:
+                return JsonResponse({'status': 'error', 'message': '대화 내용이 없습니다.'})
+            
+            # 대화 저장
+            conversation = Conversation.objects.create(
+                user=request.user,
+                content=conversation_text
+            )
+            
+            return JsonResponse({'status': 'success'})
+            
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    
+    return JsonResponse({'status': 'error', 'message': 'POST 요청이 필요합니다.'})
+
+
+
+
+@login_required
+def get_conversations(request):
+    conversations = Conversation.objects.filter(user=request.user).order_by('-created_at')
+    conversation_list = [{'content': c.content, 'created_at': c.created_at} for c in conversations]
+    return JsonResponse({'status': 'success', 'conversations': conversation_list})
+    
+@login_required
+def chat_history(request):
+    # 로그인한 사용자의 채팅 기록을 가져옵니다. 오름차순으로 정렬
+    messages = ChatMessage.objects.filter(user=request.user).order_by('timestamp')
+    return render(request, 'chat_history.html', {'messages': messages})
+
+@login_required
+def clear_chat_history(request):
+    if request.method == "POST":
+        try:
+            ChatMessage.objects.filter(user=request.user).delete()  # 현재 사용자의 모든 채팅 기록 삭제
+            return JsonResponse({"success": True, "message": "Chat history cleared."})
+        except Exception as e:
+            return JsonResponse({"success": False, "message": str(e)})  # 예외 메시지 반환
+    return JsonResponse({"success": False, "message": "Invalid request."})

@@ -1,0 +1,126 @@
+<!-- django_project/templates/chat_history.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <title>Chat History</title>
+    <link rel="stylesheet" href="{% static 'css/header.css' %}">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #e9ecef; /* 배경색 */
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            overflow-y: auto;
+            height: 500px; /* 높이 조정 */
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 10px;
+            position: relative;
+            max-width: 80%; /* 최대 너비 설정 */
+        }
+
+        .user-message {
+            background-color: #cce5ff; /* 사용자 메시지 색상 */
+            align-self: flex-start;
+            margin-right: auto; /* 왼쪽 정렬 */
+        }
+
+        .bot-response {
+            background-color: #ffeeba; /* 챗봇 응답 색상 */
+            align-self: flex-end;
+            margin-left: auto; /* 오른쪽 정렬 */
+        }
+
+        .timestamp {
+            font-size: 0.8em;
+            color: #888;
+            text-align: right; /* 오른쪽 정렬 */
+            margin-top: 5px; /* 위쪽 여백 추가 */
+        }
+
+        .chat-box {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .clear-button {
+            margin: 10px 0;
+            padding: 10px 15px;
+            background-color: #ff6b6b; /* 초기화 버튼 색상 */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .clear-button:hover {
+            background-color: #ff4d4d; /* 호버 시 색상 변경 */
+        }
+    </style>
+    <script>
+        function clearChatHistory() {
+            if (confirm("Are you sure you want to clear your chat history?")) {
+                fetch("{% url 'clear_chat_history' %}", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}",  // CSRF 토큰 추가
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();  // 페이지 새로 고침
+                    } else {
+                        alert("Failed to clear chat history.");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("An error occurred while clearing chat history.");
+                });
+            }
+        }
+    </script>
+</head>
+<body>
+    {% include 'includes/header.html' %}
+
+    <h1>Your Chat History</h1>
+    <button class="clear-button" onclick="clearChatHistory()">Clear Chat History</button>  <!-- 초기화 버튼 추가 -->
+    <div class="chat-container">
+        <div class="chat-box">
+            {% for message in messages %}
+                <div class="message user-message">
+                    <strong>USER:</strong> {{ message.message }}
+                    <div class="timestamp">{{ message.timestamp|date:"Y-m-d H:i:s" }}</div>
+                </div>
+                <div class="message bot-response">
+                    <strong>{{ message.character }}:</strong> {{ message.response|default:"No response" }}
+                    <div class="timestamp">{{ message.timestamp|date:"Y-m-d H:i:s" }}</div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
