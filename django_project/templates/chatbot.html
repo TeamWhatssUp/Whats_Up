@@ -21,6 +21,7 @@
         window.onload = () => {
             document.getElementById("character-name").innerText = character || "Default Character";
 
+
             const chatBox = document.getElementById("chat-box");
 
             // 인트로 메시지가 이미 추가되지 않았다면 추가
@@ -41,17 +42,33 @@
             }
 
             // 사용자 입력 필드에서 엔터 키 감지
-            document.getElementById("user-input").addEventListener("keydown", function(event) {
-                if (event.key === "Enter") { 
-                    event.preventDefault(); // 기본 동작 방지
-                    document.getElementById("SendButton").click(); // Send 버튼 클릭
+            document.getElementById("user-input").addEventListener("keyup", function(event) {
+                if (event.key === "Enter" && !event.repeat) { // Prevent repeated keydown
+                    event.preventDefault(); // Prevent form submission
+                    sendMessage(); // Call the function only once
                 }
             });
+
         };
-        
+
         async function sendMessage(message, isSTT = false) {
             const userInput = message || document.getElementById("user-input").value;
             const chatBox = document.getElementById("chat-box");
+
+            // 캐릭터별 목소리 설정
+            const characterVoiceMapping = {
+                "Default": "nova", 
+                "Monica": "nova", 
+                "Chandler": "ash",
+                "Rachel":"coral",
+                "Ross":"onyx",
+                "Joey":"echo",
+                "Phoebe":"shimmer" 
+                
+            };
+
+            // 캐릭터에 맞는 목소리 가져오기
+            const characterVoice = characterVoiceMapping[character] || "nova"; // 기본은 "nova"
 
             // 로딩 애니메이션 추가
             const loadingElement = document.createElement("div");
@@ -81,7 +98,8 @@
                     body: JSON.stringify({ 
                         message: userInput, 
                         character: character, 
-                        id: "{{ request.user.id }}" // 로그인한 사용자 ID 추가
+                        id: "{{ request.user.id }}", // 로그인한 사용자 ID 추가
+                        voice: characterVoice
                     }),
                 });
 
@@ -117,7 +135,7 @@
                         audioElement.controls = true;
                         const sourceElement = document.createElement("source");
                         sourceElement.src = data.audio_url;
-                        sourceElement.type = "audio/wav";
+                        sourceElement.type = "audio/mp3";
                         audioElement.appendChild(sourceElement);
                         audioContainer.appendChild(audioElement);
                         chatBox.appendChild(audioContainer);
@@ -205,7 +223,7 @@
     <!-- 사용자 입력 필드 -->
     <div style="display: flex; gap: 10px; margin-top: 10px;">
         <input id="user-input" type="text" placeholder="Type your message here" style="flex: 1;">
-        <button id="SendButton" onclick="sendMessage()">Send</button>
+        <button onclick="sendMessage()">Send</button>
     </div>
 
     <!-- 녹음 기능  -->
@@ -250,7 +268,7 @@
                     });
     
                     mediaRecorder.addEventListener("stop", () => {
-                        audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
                         const audioUrl = URL.createObjectURL(audioBlob);
                         audioPlayback.src = audioUrl;
                         statusMessage.textContent = "Recording complete. Sending to server...";
@@ -277,7 +295,7 @@
         // 사용자가 녹음한 오디오가 완료된 후 오디오 태그를 사용자 메시지 바로 아래에 배치
         function sendAudioToServer(audioBlob) {
             const formData = new FormData();
-            formData.append('audio_file', audioBlob, 'recording.wav');
+            formData.append('audio_file', audioBlob, 'recording.mp3');
 
             fetch('save-audio/', {
                 method: 'POST',
