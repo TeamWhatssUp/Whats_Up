@@ -18,7 +18,6 @@ from langchain_openai import OpenAIEmbeddings
 from openai import OpenAI
 from openai import OpenAIError
 from dotenv import load_dotenv
-import pyaudio
 import wave
 import os
 import base64
