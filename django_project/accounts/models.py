@@ -15,6 +15,7 @@ class ChatRules(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s Chat Rules"
+
     
 User = get_user_model()
 
@@ -39,3 +40,4 @@ class ChatMessage(models.Model):
 
     def __str__(self):
         return f"{self.user.username}: {self.message[:20]}..."  # 메시지 미리보기
+

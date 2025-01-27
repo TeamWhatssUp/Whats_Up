@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
+
 from accounts.views import (
     chatbot_page, 
     friends_selection, 
@@ -9,6 +10,7 @@ from accounts.views import (
     get_conversations, 
     chat_history,
 )
+
 from accounts.chat_rules import chat_rules_view, save_chat_rules  # chat_rules.py에서 직접 불러오기
 from accounts.user_profile import profile_view
 from accounts import views as accounts_views  # accounts의 views를 accounts_views로 임포트
@@ -39,3 +41,4 @@ urlpatterns = [
 
     path('saved/', chat_history, name='chat_history'),
 ]
+

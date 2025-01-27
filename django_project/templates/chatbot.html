@@ -21,6 +21,7 @@
         window.onload = () => {
             document.getElementById("character-name").innerText = character || "Default Character";
 
+
             const chatBox = document.getElementById("chat-box");
 
             // 인트로 메시지가 이미 추가되지 않았다면 추가
@@ -47,8 +48,9 @@
                     document.getElementById("SendButton").click(); // Send 버튼 클릭
                 }
             });
+
         };
-        
+
         async function sendMessage(message, isSTT = false) {
             const userInput = message || document.getElementById("user-input").value;
             const chatBox = document.getElementById("chat-box");
@@ -117,7 +119,7 @@
                         audioElement.controls = true;
                         const sourceElement = document.createElement("source");
                         sourceElement.src = data.audio_url;
-                        sourceElement.type = "audio/wav";
+                        sourceElement.type = "audio/mp3";
                         audioElement.appendChild(sourceElement);
                         audioContainer.appendChild(audioElement);
                         chatBox.appendChild(audioContainer);
@@ -205,7 +207,7 @@
     <!-- 사용자 입력 필드 -->
     <div style="display: flex; gap: 10px; margin-top: 10px;">
         <input id="user-input" type="text" placeholder="Type your message here" style="flex: 1;">
-        <button id="SendButton" onclick="sendMessage()">Send</button>
+        <button onclick="sendMessage()">Send</button>
     </div>
 
     <!-- 녹음 기능  -->
@@ -250,7 +252,7 @@
                     });
     
                     mediaRecorder.addEventListener("stop", () => {
-                        audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
                         const audioUrl = URL.createObjectURL(audioBlob);
                         audioPlayback.src = audioUrl;
                         statusMessage.textContent = "Recording complete. Sending to server...";
@@ -277,7 +279,7 @@
         // 사용자가 녹음한 오디오가 완료된 후 오디오 태그를 사용자 메시지 바로 아래에 배치
         function sendAudioToServer(audioBlob) {
             const formData = new FormData();
-            formData.append('audio_file', audioBlob, 'recording.wav');
+            formData.append('audio_file', audioBlob, 'recording.mp3');
 
             fetch('save-audio/', {
                 method: 'POST',

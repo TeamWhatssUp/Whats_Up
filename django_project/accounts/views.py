@@ -38,6 +38,7 @@ from .custom_chat import get_user_chat_rules # 저장한 대화 규칙을 챗봇
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login 
 from django.contrib.auth.hashers import make_password
+
 from django.contrib.auth.views import PasswordChangeView
 from django.urls import reverse_lazy
 from django.contrib.messages.views import SuccessMessageMixin
@@ -57,6 +58,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import Conversation
 from django.db import models
 from .models import ChatMessage
+
 # Create your views here.
 
 def index(request):
@@ -209,9 +211,11 @@ def chatbot_api(request):
             # 사용자 정보를 포함하여 챗봇 응답 생성
             response = generate_chat_response(character_name, user_query, user=request.user)
 
+
             # 챗봇의 응답을 모델에 저장
             chat_message.response = response  # 챗봇의 응답 저장
             chat_message.save()  # 변경 사항 저장
+
 
             # TTS 생성 파일 경로
             timestamp = int(time.time())

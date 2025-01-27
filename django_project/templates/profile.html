@@ -11,6 +11,7 @@
         <div class="container mt-5">
             <h1 class="mb-4">사용자 프로필</h1>
 
+
             <!-- 메시지 출력 -->
             {% if messages %}
                 <div>
@@ -31,6 +32,7 @@
                     <p class="card-text">이메일: {{ request.user.email }}</p>
                 </div>
             </div>
+
 
 <!-- 비밀번호 변경 -->
 <div class="card mb-4">
@@ -72,6 +74,7 @@
             input.type = "password";
         }
     }
+
 
     // 비밀번호 변경 요청 처리
     document.getElementById("password-change-form").addEventListener("submit", async function (event) {
@@ -166,6 +169,7 @@
             },
         });
 
+
         const contentType = response.headers.get("content-type");
         if (contentType && contentType.includes("application/json")) {
             const data = await response.json();
@@ -194,6 +198,7 @@
             const message = password.length >= 8 ? "사용 가능한 비밀번호입니다." : "비밀번호는 최소 8자 이상이어야 합니다.";
             document.getElementById('password-feedback').textContent = message;
         });
+
     </script>
 </body>
 </html>
