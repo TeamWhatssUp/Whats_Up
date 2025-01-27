@@ -193,6 +193,7 @@ def generate_chat_response(character_name, user_query, user=None, summary_thresh
 
     Start with this personalized introduction: "{character_intro}"
     The user prefers the conversation style: "{user_chat_rules}".
+    Please respond only in English.
     """
 
     # 대본 데이터 로드

@@ -42,10 +42,10 @@
             }
 
             // 사용자 입력 필드에서 엔터 키 감지
-            document.getElementById("user-input").addEventListener("keydown", function(event) {
-                if (event.key === "Enter") { 
-                    event.preventDefault(); // 기본 동작 방지
-                    sendMessage(); // 직접 sendMessage 호출
+            document.getElementById("user-input").addEventListener("keyup", function(event) {
+                if (event.key === "Enter" && !event.repeat) { // Prevent repeated keydown
+                    event.preventDefault(); // Prevent form submission
+                    sendMessage(); // Call the function only once
                 }
             });
 

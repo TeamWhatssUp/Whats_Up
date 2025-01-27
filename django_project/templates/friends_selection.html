@@ -43,6 +43,32 @@
         .character button:hover {
             background-color: #0056b3;
         }
+
+        /* 왼쪽과 오른쪽 GIF 스타일 */
+        .side-gif {
+            position: fixed;
+            width: 300px;
+        }
+        .left {
+            left: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .right {
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .side-gif img {
+            width: 100%;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
@@ -75,6 +101,18 @@
             <img src="{% static 'images/phoebe.jpg' %}" alt="Phoebe">
             <button onclick="location.href='/chatbot/?character=Phoebe'">Select Phoebe</button>
         </div>
+    </div>
+
+    <!-- 왼쪽 GIF -->
+    <div class="side-gif left">
+        <img src="{% static 'images/3girl.gif' %}" alt="GIF 1">
+        <img src="{% static 'images/all.gif' %}" alt="GIF 2">
+    </div>
+
+    <!-- 오른쪽 GIF -->
+    <div class="side-gif right">
+        <img src="{% static 'images/all3.gif' %}" alt="GIF 3">
+        <img src="{% static 'images/3girl2.gif' %}" alt="GIF 4">
     </div>
 </body>
 </html>
