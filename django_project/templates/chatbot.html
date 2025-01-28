@@ -153,6 +153,7 @@
                 scrollToBottom(chatBox); // 응답이 끝난 후 스크롤
             } catch (error) {
                 // 에러 처리
+                console.log(error)
                 chatBox.innerHTML += `<p><strong>Error:</strong> Unable to connect to the server.</p>`;
                 loadingElement.remove();
                 scrollToBottom(chatBox); // 에러 발생 시에도 스크롤
