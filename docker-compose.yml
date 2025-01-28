@@ -22,3 +22,5 @@ services:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
     depends_on:
       - db
+    env_file:
+      - .env
