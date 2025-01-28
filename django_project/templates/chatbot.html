@@ -12,6 +12,7 @@
 
         // CSRF 토큰 가져오기
         const csrftoken = "{{ csrf_token }}";  // Django 템플릿에서 CSRF 토큰 가져오기
+        const access_token = "{{ access_token }}";
 
         // 음성 인식 변수
         let recognition = null;
@@ -94,6 +95,7 @@
                     headers: {
                         "Content-Type": "application/json",
                         "X-CSRFToken": csrftoken,  // CSRF 토큰 추가
+                        "Authorization": `Bearer ${access_token}`
                     },
                     body: JSON.stringify({ 
                         message: userInput, 
