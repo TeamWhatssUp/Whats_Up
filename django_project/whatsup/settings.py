@@ -26,7 +26,7 @@ SECRET_KEY = "django-insecure-!0&6*vmjtu)$=+o$=^!%+lnpzf5nu1qnvh&aup6rmf&@bl83k9
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['whatsssup.com/', 'https://whatsssup.com/']
 
 
 # Application definition
@@ -222,3 +222,7 @@ MESSAGE_TAGS = {
     message_constants.WARNING: 'warning',
     message_constants.ERROR: 'error',
 }
+
+CSRF_TRUSTED_ORIGINS = ['https://whatsssup.com/', 'https://whatsssup.com/']
+
+CORS_ALLOWED_ORIGINS = ['https://whatsssup.com/', 'https://whatsssup.com/']
