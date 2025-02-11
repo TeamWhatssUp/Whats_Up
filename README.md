@@ -107,16 +107,16 @@ What’s Up은 AI 기반 영어 학습 챗봇으로, 미드 *프렌즈*의 대�
 ## 프로젝트 와이어프레임
 
 #### 로그인 페이지
-![로그인 페이지 와이어프레임](django_project\static/images/wireframe_loginpage.jpg)
+![로그인 페이지 와이어프레임](django_project/static/images/wireframe_loginpage.jpg)
 
 #### 챗봇 페이지
-![챗봇 페이지 와이어프레임](django_project\static/images/wireframe_chatbotpage.jpg)
+![챗봇 페이지 와이어프레임](django_project/static/images/wireframe_chatbotpage.jpg)
 
 ---
 
 ## ERD 설계
 
-![ERD 이미지](django_project\static/images/ERD.png)
+![ERD 이미지](django_project/static/images/ERD.png)
 
 ---
 
